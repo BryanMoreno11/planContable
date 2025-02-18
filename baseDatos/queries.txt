@@ -1,0 +1,10 @@
+CREATE TABLE cuenta(
+cuenta_id SERIAL PRIMARY KEY , 
+cuenta_id_padre INT,
+cuenta_grupo VARCHAR(100),
+cuenta_codigopadre VARCHAR(100),
+cuenta_codigonivel VARCHAR (100),
+cuenta_descripcion VARCHAR (500),
+cuenta_naturaleza VARCHAR (100),
+FOREIGN KEY (cuenta_id_padre) REFERENCES cuenta (cuenta_id)
+);
