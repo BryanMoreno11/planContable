@@ -7,6 +7,6 @@ const {crearCuenta, obtenerCuentasHijas, obtenerGrupos,
 router.post("/cuentas", crearCuenta);
 router.get("/cuentas", obtenerCuentas);
 router.get("/cuentas/grupos", obtenerGrupos);
-router.post("/cuentas/hijas", obtenerCuentasHijas);
+router.get("/cuentas/hijas/:id", obtenerCuentasHijas);
 
 module.exports = router;    
