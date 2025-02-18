@@ -7,6 +7,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 //rutas
+app.use("/api",require("./Routes/cuentaRoutes"));
 //init
 app.listen(3000);
 conexionSequelize.authenticate();
