@@ -1,6 +1,5 @@
-<div>
-  <h1>Plan de Cuentas</h1>
-  <div class="row">
+<div class="contenedor">
+  <div class="row gap-3">
     <div class="planes col-12 col-md-6">
       <mat-tree #tree [dataSource]="dataNodes" [treeControl]="treeControl">
         <mat-tree-node
@@ -24,6 +23,30 @@
       </mat-tree>
     </div>
 
-    <div class="col-12 col-md-6"></div>
+    <div class="cuenta-detalle col-12 col-md-5">
+
+      <h2>Información de Cuenta Contable</h2>
+      <form>
+          <div class="mb-3">
+              <label for="grupo" class="form-label">Grupo</label>
+              <input type="text" class="form-control" id="grupo" value="ACTIVO" readonly>
+          </div>
+          <div class="mb-3">
+              <label for="cuentaPadre" class="form-label">Cuenta Padre</label>
+              <input type="text" class="form-control" id="cuentaPadre" value="1.01.01 EFECTIVO Y EQUIVALENTES AL EFECTIVO" readonly>
+          </div>
+          <div class="mb-3">
+              <label for="codigo" class="form-label">Código</label>
+              <input type="text" class="form-control" id="codigo" value="1.01.01    03" readonly>
+          </div>
+          <div class="mb-3">
+              <label for="descripcion" class="form-label">Descripción</label>
+              <input type="text" class="form-control" id="descripcion" value="Bancos" readonly>
+          </div>
+      </form>
+    </div>
+
+
+  
   </div>
 </div>

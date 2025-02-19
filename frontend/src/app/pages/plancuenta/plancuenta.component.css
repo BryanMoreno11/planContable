@@ -1,0 +1,11 @@
+.contenedor{
+    padding: 20px;
+}
+
+.cuenta-detalle{
+    border: 1px solid red;
+}
+
+.planes{
+    border: 1px solid blue;
+}

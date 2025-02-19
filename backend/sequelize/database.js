@@ -7,6 +7,10 @@ const conexionSequelize = new Sequelize({
     database: 'plan_cuenta',
     port: '5432',
     dialect: 'postgres',
+    logging:false,
+    define: {
+        timestamps: false,
+    }
 });
 //exportación
 module.exports = conexionSequelize;

@@ -20,5 +20,10 @@ export class PlancuentaService {
   }
 
 
+  getCuenta(id_cuenta:number): Observable<Cuenta[]> {
+    return this._httpClient.get<Cuenta[]>(`http://localhost:3000/api/cuentas/hijas/${id_cuenta}`);
+  }
+
+
 
 }
