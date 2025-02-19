@@ -4,6 +4,7 @@ import {MatTreeFlatDataSource, MatTreeFlattener, MatTreeModule} from '@angular/m
 import { FlatTreeControl } from '@angular/cdk/tree';
 import { PlancuentaService } from '../../services/plancuenta.service';
 import { Cuenta } from '../../interfaces/Cuenta';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
   selector: 'app-plancuenta',
@@ -14,75 +15,62 @@ import { Cuenta } from '../../interfaces/Cuenta';
 })
 export class PlancuentaComponent implements OnInit {
 
-  constructor(private _planCuentaService:PlancuentaService)  {
-  }
+  treeControl: FlatTreeControl<ExampleFlatNode>;
+  dataNodes = new BehaviorSubject<ExampleFlatNode[]>([]);
 
-  cargarNodosPrincipales() {
-    this._planCuentaService.getGrupos().subscribe(data => {
-     this.dataSource.data = data;
-    });
+  constructor(private _planCuentaService: PlancuentaService) {
+    this.treeControl = new FlatTreeControl<ExampleFlatNode>(
+      (node) => node.level,
+      (node) => node.expandable
+    );
   }
 
   ngOnInit(): void {
     this.cargarNodosPrincipales();
   }
 
+  cargarNodosPrincipales() {
+    this._planCuentaService.getGrupos().subscribe((data) => {
+      const nodes = data.map((item) => this._transformer(item, 0));
+      this.dataNodes.next(nodes);
+    });
+  }
 
+  cargarHijos(nodo: ExampleFlatNode): void {
+    
+    if (!nodo.isLoading && nodo.expandable) {
+      nodo.isLoading = true;
+      this._planCuentaService.getCuentas(nodo.id).subscribe(
+        (hijos) => {
+          const currentData = this.dataNodes.getValue();
+          const parentIndex = currentData.findIndex(n => n.id === nodo.id);
+          
+          if (parentIndex !== -1) {
+            const newNodes = hijos.map(hijo => this._transformer(hijo, nodo.level+1));
+            currentData.splice(parentIndex + 1, 0, ...newNodes);
+            this.dataNodes.next([...currentData]);  
+          }
 
-  private _transformer = (node: Cuenta, level: number) => {
+          nodo.isLoading = false;
+        },
+        (error) => {
+          nodo.isLoading = false;
+        }
+      );
+    }
+  }
+
+  private _transformer(node: Cuenta, level: number): ExampleFlatNode {
     return {
-      expandable: true,
+      id: node.cuenta_id,
       name: node.texto,
       level: level,
-      id:node.cuenta_id,
+      expandable: true,
       isLoading: false,
     };
-  };
+  }
 
-  treeControl = new FlatTreeControl<ExampleFlatNode>(
-    (node) => node.level,
-    (node) => node.expandable
-  );
-
-  treeFlattener = new MatTreeFlattener(
-    this._transformer,
-    (node) => node.level,
-    (node) => node.expandable,
-    (node) => node.children || []
-  );
-
-  dataSource = new MatTreeFlatDataSource(
-    this.treeControl, this.treeFlattener);
-
-
-
-  hasChild = (_: number, 
-    node: ExampleFlatNode) => node.expandable;
-
-
-    cargarHijos(nodo: ExampleFlatNode): void {
-      if (!nodo.isLoading && nodo.expandable) {
-        nodo.isLoading = true;
-        this._planCuentaService.getCuentas(nodo.id).subscribe(
-          (hijos) => {
-            const index = this.dataSource.data.findIndex((n) => n.cuenta_id === nodo.id);
-            if (index !== -1) {
-              console.log("se encontro el nodo padre");
-              this.dataSource.data[index].children = hijos; // Asigna los hijos
-              this.dataSource.data = [...this.dataSource.data]; // Actualiza la fuente de datos
-              this.treeControl.expand(this.treeControl.dataNodes[nodo.level]); // Expande el nodo Padre
-            }
-
-            nodo.isLoading = false;
-          },
-          (error) => {
-            nodo.isLoading = false;
-          }
-        );
-      }
-    }
-
-  
+  hasChild = (_: number, node: ExampleFlatNode) => node.expandable;
     
     
 
@@ -106,4 +94,5 @@ interface ExampleFlatNode {
   level: number;
   id: number;
   isLoading:boolean;
+  
 }
