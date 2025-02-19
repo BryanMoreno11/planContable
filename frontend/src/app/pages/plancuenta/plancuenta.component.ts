@@ -4,13 +4,15 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatTreeModule} from '@angular/material/tree';
 import { FlatTreeControl } from '@angular/cdk/tree';
 import { PlancuentaService } from '../../services/plancuenta.service';
-import { Cuenta } from '../../interfaces/Cuenta';
+import { Cuenta, Nodo_Cuenta } from '../../interfaces/Cuenta';
 import { BehaviorSubject } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+
 
 @Component({
   selector: 'app-plancuenta',
   standalone: true,
-  imports: [MatTreeModule,MatIconModule, MatButtonModule],
+  imports: [MatTreeModule,MatIconModule, MatButtonModule, FormsModule],
   templateUrl: './plancuenta.component.html',
   styleUrl: './plancuenta.component.css'
 })
@@ -18,6 +20,7 @@ export class PlancuentaComponent implements OnInit {
 
   treeControl: FlatTreeControl<ExampleFlatNode>;
   dataNodes = new BehaviorSubject<ExampleFlatNode[]>([]);
+  cuenta:Cuenta= { } as Cuenta;
 
   constructor(private _planCuentaService: PlancuentaService) {
     this.treeControl = new FlatTreeControl<ExampleFlatNode>(
@@ -83,7 +86,15 @@ export class PlancuentaComponent implements OnInit {
       }
   }
 
-  private _transformer(node: Cuenta, level: number): ExampleFlatNode {
+  obtenerCuenta(id_cuenta:number){
+    this._planCuentaService.getCuenta(id_cuenta).subscribe((data) => {
+      console.log("La data es ", data);
+      this.cuenta = data;
+      console.log("La cuenta es ", this.cuenta);
+    });
+  }
+
+  private _transformer(node: Nodo_Cuenta, level: number): ExampleFlatNode {
     return {
       id: node.cuenta_id,
       name: node.texto,
