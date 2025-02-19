@@ -1,48 +1,29 @@
-
 <div>
-    <div class="row">
-      <div class="planes col-12 col-md-6">
-
-        <mat-tree [dataSource]="dataNodes" 
-          [treeControl]="treeControl">
-    <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
-
-        <!-- Adding disabled property to button 
-            so as to give padding to nodes -->
-        <button mat-icon-button disabled></button>
-            {{node.name}} 
-    </mat-tree-node>
-    
-    <!-- Tree node template for expandable nodes -->
-    <mat-tree-node 
-        *matTreeNodeDef="let node;when: hasChild" 
-        matTreeNodePadding>
-        <button (click)="cargarHijos(node)"    mat-icon-button matTreeNodeToggle 
-            [attr.aria-label]=
-              "'Toggle ' + node.name">
-            <mat-icon class="mat-icon-rtl-mirror"> 
-                {{treeControl.isExpanded(node) ? 
-                    'expand_more' : 'chevron_right'}} 
+  <h1>Plan de Cuentas</h1>
+  <div class="row">
+    <div class="planes col-12 col-md-6">
+      <mat-tree #tree [dataSource]="dataNodes" [treeControl]="treeControl">
+        <mat-tree-node
+          *matTreeNodeDef="let node; when: hasChild"
+          matTreeNodePadding
+          matTreeNodeToggle
+          [cdkTreeNodeTypeaheadLabel]="node.name"
+        >
+          <button
+            mat-icon-button
+            matTreeNodeToggle
+            [attr.aria-label]="'Toggle ' + node.name"
+            (click)="cargarHijos(node)"
+          >
+            <mat-icon class="mat-icon-rtl-mirror">
+              {{ tree.isExpanded(node) ? "expand_more" : "chevron_right" }}
             </mat-icon>
-        </button>
-            {{node.name}} 
-    </mat-tree-node>
-</mat-tree>
-
-
-
-
-
-
-
-
-
-
-
-      </div>
-  
-      <div class="col-12 col-md-6">
-      </div>
-
+          </button>
+          {{ node.name }}
+        </mat-tree-node>
+      </mat-tree>
     </div>
+
+    <div class="col-12 col-md-6"></div>
   </div>
+</div>

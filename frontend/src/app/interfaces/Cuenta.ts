@@ -3,5 +3,4 @@ export interface Cuenta {
     cuenta_descripcion: string;
     cuenta_codigonivel: string;
     texto: string;
-    children?: Cuenta[];
   }

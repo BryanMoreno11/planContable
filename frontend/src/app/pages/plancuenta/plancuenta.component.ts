@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
-import {MatTreeFlatDataSource, MatTreeFlattener, MatTreeModule} from '@angular/material/tree';
+import {MatTreeModule} from '@angular/material/tree';
 import { FlatTreeControl } from '@angular/cdk/tree';
 import { PlancuentaService } from '../../services/plancuenta.service';
 import { Cuenta } from '../../interfaces/Cuenta';
@@ -9,7 +10,7 @@ import { BehaviorSubject } from 'rxjs';
 @Component({
   selector: 'app-plancuenta',
   standalone: true,
-  imports: [MatTreeModule,MatIconModule],
+  imports: [MatTreeModule,MatIconModule, MatButtonModule],
   templateUrl: './plancuenta.component.html',
   styleUrl: './plancuenta.component.css'
 })
@@ -37,27 +38,49 @@ export class PlancuentaComponent implements OnInit {
   }
 
   cargarHijos(nodo: ExampleFlatNode): void {
-    
-    if (!nodo.isLoading && nodo.expandable) {
-      nodo.isLoading = true;
-      this._planCuentaService.getCuentas(nodo.id).subscribe(
-        (hijos) => {
-          const currentData = this.dataNodes.getValue();
-          const parentIndex = currentData.findIndex(n => n.id === nodo.id);
-          
-          if (parentIndex !== -1) {
-            const newNodes = hijos.map(hijo => this._transformer(hijo, nodo.level+1));
-            currentData.splice(parentIndex + 1, 0, ...newNodes);
-            this.dataNodes.next([...currentData]);  
-          }
 
-          nodo.isLoading = false;
-        },
-        (error) => {
-          nodo.isLoading = false;
+    if(nodo.expanded==true){
+      this.treeControl.collapse(nodo);
+      nodo.expanded = false;
+      const currentData = this.dataNodes.getValue();
+      const parentIndex = currentData.findIndex(n => n.id === nodo.id);
+      if (parentIndex !== -1) {
+        let removeCount=0;
+        for(let i= parentIndex+1; i<currentData.length;i++){
+          if(currentData[i].level<=nodo.level){
+            break;
+          }
+          removeCount++;
         }
-      );
+        currentData.splice(parentIndex+1, removeCount);
+        this.dataNodes.next([...currentData]);
+      }
+      return;
     }
+
+
+    
+    if (!nodo.isLoading && nodo.expandable && !nodo.expanded) {
+      nodo.isLoading = true;
+        nodo.expanded=true;
+        this._planCuentaService.getCuentas(nodo.id).subscribe(
+          (hijos) => {
+            const currentData = this.dataNodes.getValue();
+            const parentIndex = currentData.findIndex(n => n.id === nodo.id);
+            
+            if (parentIndex !== -1) {
+              const newNodes = hijos.map(hijo => this._transformer(hijo, nodo.level+1));
+              currentData.splice(parentIndex + 1, 0, ...newNodes);
+              this.dataNodes.next([...currentData]);  
+              console.log("Los nodos son ", currentData);
+            }
+            nodo.isLoading = false;
+          },
+          (error) => {
+            nodo.isLoading = false;
+          }
+        );
+      }
   }
 
   private _transformer(node: Cuenta, level: number): ExampleFlatNode {
@@ -67,6 +90,7 @@ export class PlancuentaComponent implements OnInit {
       level: level,
       expandable: true,
       isLoading: false,
+      expanded:false,
     };
   }
 
@@ -94,5 +118,6 @@ interface ExampleFlatNode {
   level: number;
   id: number;
   isLoading:boolean;
+  expanded:boolean;
   
 }

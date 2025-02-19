@@ -26,8 +26,6 @@ async function obtenerGrupos(req, res) {
             where: {
                 cuenta_idpadre: null
             },
-         
-        
         });
         const gruposMap = grupos.map(grupo => ({
             cuenta_id:grupo.cuenta_id,
