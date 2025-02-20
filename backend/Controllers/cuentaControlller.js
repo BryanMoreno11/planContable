@@ -115,34 +115,22 @@ async function exportarCuentasExcel(req, res) {
     const resultados = []; 
     //Obtener todas las cuentas de la BD
     const cuentas = await ModuleSQL.Cuenta.findAll();
-    //Crear un mapa para almacenar las cuentas por su ID
-    const cuentasMap = new Map();
-    cuentas.forEach((cuenta) => {
-      cuentasMap.set(cuenta.cuenta_id, cuenta);
-    });
     //Obtención de grupos
     const grupos = cuentas.filter((cuenta) => cuenta.cuenta_idpadre === null)
     .sort((a, b) => a.cuenta_codigonivel.localeCompare(b.cuenta_codigonivel));
-    //Función recursiva para explorar los hijos
     grupos.forEach((grupo) => {
       resultados.push({
         codigoCuenta: grupo.cuenta_codigonivel,
         cuentaContable: grupo.cuenta_descripcion,
         Naturaleza: grupo.cuenta_naturaleza,
       });
-      // Obtener los hijos del grupo principal
-      const hijos = Array.from(cuentasMap.values())
-        .filter((cuenta) => cuenta.cuenta_idpadre === grupo.cuenta_id)
+      const hijos = cuentas.filter((cuenta) => cuenta.cuenta_idpadre === grupo.cuenta_id)
         .sort((a, b) =>
           a.cuenta_codigonivel.localeCompare(b.cuenta_codigonivel)
         );
-
-      // Explorar los hijos recursivamente
-      explorarHijos(hijos, cuentasMap, resultados);
+      // Explorar los hijos de los grupos recursivamente
+      explorarHijos(hijos, cuentas, resultados);
     });
-
-    console.log("Los resultados son ", resultados);
-
     return res.status(200).json(resultados);
   } catch (error) {
     res
@@ -151,7 +139,7 @@ async function exportarCuentasExcel(req, res) {
   }
 }
 
-function explorarHijos(hijos, mapaCuentas, resultados) {
+function explorarHijos(hijos, cuentas, resultados) {
   if (!hijos || hijos.length === 0){
     return;
   } 
@@ -163,13 +151,13 @@ function explorarHijos(hijos, mapaCuentas, resultados) {
       Naturaleza: hijo.cuenta_naturaleza,
     });
 
-    const hijosDelHijo = Array.from(mapaCuentas.values())
+    const hijosDelHijo = Array.from(cuentas.values())
       .filter((cuenta) => cuenta.cuenta_idpadre === hijo.cuenta_id)
       .sort((a, b) => a.cuenta_codigonivel.localeCompare(b.cuenta_codigonivel));
-
     // Llamada recursiva para explorar los hijos del hijo
-    explorarHijos(hijosDelHijo, mapaCuentas, resultados);
+    explorarHijos(hijosDelHijo, cuentas, resultados);
   });
+
 }
 
 module.exports = {
