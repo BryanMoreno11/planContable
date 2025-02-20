@@ -9,7 +9,7 @@ router.get("/cuentas", obtenerCuentas);
 router.get("/cuenta/:id", obtenerCuenta);
 router.get("/cuentas/grupos", obtenerGrupos);
 router.get("/cuentas/hijas/:id", obtenerCuentasHijas);
-router.get("/cuentas/excel", exportarCuentasExcel);
+router.get("/cuentas/exportar", exportarCuentasExcel);
 
 
 module.exports = router;    

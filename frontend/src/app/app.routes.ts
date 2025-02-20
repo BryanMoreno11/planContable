@@ -8,5 +8,11 @@ export const routes: Routes = [
         path: 'plandecuentas',
         component: PlancuentaComponent,
     },
+
+    {
+        path: '**',
+        redirectTo: 'plandecuentas',
+        pathMatch: 'full'
+    }
    
 ];

@@ -98,6 +98,29 @@ export class PlancuentaComponent implements OnInit {
       }
   }
 
+
+  exportarExcel(){
+    this._planCuentaService.exportarCuenta().subscribe(
+      {
+        next:(data:Blob)=>{
+          const a = document.createElement('a');
+          a.href = window.URL.createObjectURL(data);
+          a.download = 'PlanDeCuentas.xlsx';
+          a.click();
+          window.URL.revokeObjectURL(a.href);
+          console.log('Excel generado con éxito');
+        },
+        error:(error)=>{
+          console.log("Error al generar el PDF", error);
+        },
+        complete:()=>{
+          console.log("PDF generado con éxito");
+        }
+      }
+    )
+  }
+
+
   obtenerCuenta(id_cuenta:number){
     this._planCuentaService.getCuenta(id_cuenta).subscribe((data) => {
       console.log("La data es ", data);

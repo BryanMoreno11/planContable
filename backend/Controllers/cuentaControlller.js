@@ -1,4 +1,6 @@
 const ModuleSQL = require("../sequelize/models");
+const Xlsx= require("xlsx");
+
 
 async function crearCuenta(req, res) {
   try {
@@ -131,7 +133,10 @@ async function exportarCuentasExcel(req, res) {
       // Explorar los hijos de los grupos recursivamente
       explorarHijos(hijos, cuentas, resultados);
     });
-    return res.status(200).json(resultados);
+    //Exportar archivo Excel
+    res.setHeader('Content-Disposition', 'attachment; filename=PlanDeCuentas.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    return res.send(generarExcel("Plan de cuentas", resultados));
   } catch (error) {
     res
       .status(500)
@@ -151,7 +156,7 @@ function explorarHijos(hijos, cuentas, resultados) {
       Naturaleza: hijo.cuenta_naturaleza,
     });
 
-    const hijosDelHijo = Array.from(cuentas.values())
+    const hijosDelHijo = cuentas
       .filter((cuenta) => cuenta.cuenta_idpadre === hijo.cuenta_id)
       .sort((a, b) => a.cuenta_codigonivel.localeCompare(b.cuenta_codigonivel));
     // Llamada recursiva para explorar los hijos del hijo
@@ -159,6 +164,24 @@ function explorarHijos(hijos, cuentas, resultados) {
   });
 
 }
+
+function generarExcel(nombreArchivo, datos){
+  const workbook= Xlsx.utils.book_new();
+  const worksheet = Xlsx.utils.json_to_sheet(datos);
+
+  const range = Xlsx.utils.decode_range(worksheet['!ref']);
+  worksheet['!autofilter'] = {
+    ref: Xlsx.utils.encode_range({
+      s: { c: 0, r: 0 }, // Inicio: columna 0 (A), fila 0 (1)
+      e: { c: range.e.c, r: range.e.r }, // Fin: última columna y última fila
+    }),
+  };
+  Xlsx.utils.book_append_sheet(workbook,worksheet, nombreArchivo);
+  return Xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+}
+
+
 
 module.exports = {
   crearCuenta,

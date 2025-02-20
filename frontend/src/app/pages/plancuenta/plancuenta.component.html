@@ -1,5 +1,6 @@
 <div class="contenedor">
   <div class="row gap-3">
+    <button (click)="exportarExcel()">Exportar a Excel</button>
     <div class="planes col-12 col-md-6">
       <mat-tree #tree  [dataSource]="dataNodes" [treeControl]="treeControl">
         <mat-tree-node (click)="obtenerCuenta(node.id)"

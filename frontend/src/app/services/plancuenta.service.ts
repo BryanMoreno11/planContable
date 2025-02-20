@@ -23,6 +23,16 @@ export class PlancuentaService {
     return this._httpClient.get<any>(`${this.API_URL}cuenta/${id_cuenta}`);
   }
 
+  exportarCuenta(){
+    return this._httpClient.get(`${this.API_URL}/cuentas/exportar`,
+      {
+        responseType: 'blob'
+      }
+
+
+    );
+  }
+
 
 
 }
