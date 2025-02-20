@@ -1,4 +1,4 @@
-const { Sequelize } = require("./models");
+const { Sequelize } = require('sequelize');	
 //cadena de conexión
 const conexionSequelize = new Sequelize({
     host: '127.0.0.1',

@@ -42,7 +42,7 @@ export class PlancuentaComponent implements OnInit {
 
   cargarHijos(nodo: ExampleFlatNode): void {
 
-    if(nodo.expanded==true){
+    if(nodo.expanded){
       this.treeControl.collapse(nodo);
       nodo.expanded = false;
       const currentData = this.dataNodes.getValue();
@@ -66,22 +66,27 @@ export class PlancuentaComponent implements OnInit {
     if (!nodo.isLoading && nodo.expandable && !nodo.expanded) {
       nodo.isLoading = true;
         nodo.expanded=true;
-        this._planCuentaService.getCuentas(nodo.id).subscribe(
-          (hijos) => {
+        this._planCuentaService.getCuentas(nodo.id).subscribe({
+          next:(hijos:any) =>{
             const currentData = this.dataNodes.getValue();
             const parentIndex = currentData.findIndex(n => n.id === nodo.id);
             
             if (parentIndex !== -1) {
-              const newNodes = hijos.map(hijo => this._transformer(hijo, nodo.level+1));
+              const newNodes = hijos.map((hijo:any) => this._transformer(hijo, nodo.level+1));
               currentData.splice(parentIndex + 1, 0, ...newNodes);
               this.dataNodes.next([...currentData]);  
               console.log("Los nodos son ", currentData);
             }
             nodo.isLoading = false;
           },
-          (error) => {
+          error: (error) => {
+            nodo.isLoading = false;
+          },
+          complete: () => {
             nodo.isLoading = false;
           }
+        }
+          
         );
       }
   }

@@ -1,42 +1,63 @@
-'use strict';
+const { DataTypes } = require("sequelize");
+const sequelize = require("../index");
 
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const process = require('process');
-const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.json')[env];
-const db = {};
-
-let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
-
-fs.readdirSync(__dirname)
-  .filter(file => {
-    return (
-      file.indexOf('.') !== 0 &&
-      file !== basename &&
-      file.slice(-3) === '.js' &&
-      file.indexOf('.test.js') === -1
-    );
-  })
-  .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-    db[model.name] = model;
-  });
-
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
+const Cuenta = sequelize.define('Cuenta',{
+      cuenta_id :{
+          type:DataTypes.INTEGER,
+          primaryKey:true,
+          autoIncrement:true
+      },
+     
+      cuenta_grupo:{
+          type:DataTypes.STRING(100),
+          allowNull:false
+      },
+      cuenta_idpadre:{
+          type:DataTypes.INTEGER,
+          allowNull:true,
+          references:{
+              model:'cuenta',
+              key:'cuenta_id'
+          }
+      },
+      cuenta_codigopadre: {
+          type: DataTypes.STRING(100),
+          allowNull: true
+        },
+        cuenta_padre: {
+          type: DataTypes.STRING(100),
+          allowNull: true
+        },
+        cuenta_codigonivel: {
+          type: DataTypes.STRING(100),
+          allowNull: false
+        },
+        cuenta_descripcion: {
+          type: DataTypes.STRING(500),
+          allowNull: false
+        },
+        cuenta_naturaleza: {
+          type: DataTypes.STRING(100),
+          allowNull: false
+        }
+     
+  }, {
+      tableName: "cuenta", 
+      timestamps: false 
 });
 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
 
-module.exports = db;
+Cuenta.belongsTo(Cuenta, {
+  foreignKey: "cuenta_idpadre",
+  as: "padre"
+});
+
+Cuenta.hasMany(Cuenta, {
+  foreignKey: "cuenta_idpadre",
+  as: "hijos"
+});
+
+const SqlModule = {
+  Cuenta
+};  
+module.exports = SqlModule;

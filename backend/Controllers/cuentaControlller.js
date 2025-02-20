@@ -1,31 +1,16 @@
-const { where } = require("sequelize");
-const { Cuenta } = require("../sequelize/models");
+const ModuleSQL = require("../sequelize/models");
+
+
 async function crearCuenta(req, res) {
-  const {
-    cuenta_idpadre,
-    cuenta_descripcion,
-    cuenta_codigopadre,
-    cuenta_grupo,
-    cuenta_naturaleza,
-    cuenta_padre,
-    cuenta_codigonivel,
-  } = req.body;
-
   try {
-    const nuevaCuenta = await Cuenta.create({
-      cuenta_codigonivel: cuenta_codigonivel,
-      cuenta_idpadre: cuenta_idpadre,
-      cuenta_descripcion: cuenta_descripcion,
-      cuenta_codigopadre: cuenta_codigopadre,
-      cuenta_grupo: cuenta_grupo,
-      cuenta_naturaleza: cuenta_naturaleza,
-      cuenta_padre: cuenta_padre,
-      cuenta_codigonivel: cuenta_codigonivel,
-    });
-
-    res
-      .status(200)
-      .json({ message: "Cuenta creada exitosamente", data: nuevaCuenta });
+    await ModuleSQL.Cuenta.create(req.body).then((cuenta) => {
+      return res.status(200).json({message: "Cuenta creada correctamente"});a
+    }).catch(
+      (e) => {
+        console.log(e);
+        return res.status(404).json({ error: "Cuenta no encontrada" });
+      }
+    );
   } catch (error) {
     res
       .status(500)
@@ -35,7 +20,7 @@ async function crearCuenta(req, res) {
 
 async function obtenerGrupos(req, res) {
   try {
-    Cuenta.findAll({
+    ModuleSQL.Cuenta.findAll({
       where: {
         cuenta_idpadre: null,
       },
@@ -61,7 +46,7 @@ async function obtenerGrupos(req, res) {
 async function obtenerCuentasHijas(req, res) {
   try {
     const { id } = req.params;
-    await Cuenta.findAll({
+    await ModuleSQL.Cuenta.findAll({
       where: {
         cuenta_idpadre: id,
       },
@@ -77,6 +62,8 @@ async function obtenerCuentasHijas(req, res) {
         console.log(e);
         return res.status(404).json({ error: "Cuentas no encontradas" });
       });
+      return res.status(200).json({message: "Cuenta creada correctamente"});
+
   } catch (error) {
     res.status(500).json({ error: "Error en el servidor", details: error.message });
   }
@@ -85,7 +72,7 @@ async function obtenerCuentasHijas(req, res) {
 async function obtenerCuenta(req, res) {
   try {
     const { id } = req.params;
-    await Cuenta.findOne({
+    await ModuleSQL.Cuenta.findOne({
       where: {
         cuenta_id: id,
       },
@@ -106,7 +93,7 @@ async function obtenerCuenta(req, res) {
 
 async function obtenerCuentas(req, res) {
   try {
-   await Cuenta.findAll().then(
+   await ModuleSQL.Cuenta.findAll().then(
     (result)=>{
         return res.status(200).json(result);
     }
