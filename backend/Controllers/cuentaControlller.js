@@ -1,16 +1,16 @@
 const ModuleSQL = require("../sequelize/models");
 
-
 async function crearCuenta(req, res) {
   try {
-    await ModuleSQL.Cuenta.create(req.body).then((cuenta) => {
-      return res.status(200).json({message: "Cuenta creada correctamente"});a
-    }).catch(
-      (e) => {
+    await ModuleSQL.Cuenta.create(req.body)
+      .then((cuenta) => {
+        return res.status(200).json({ message: "Cuenta creada correctamente" });
+        a;
+      })
+      .catch((e) => {
         console.log(e);
         return res.status(404).json({ error: "Cuenta no encontrada" });
-      }
-    );
+      });
   } catch (error) {
     res
       .status(500)
@@ -24,11 +24,12 @@ async function obtenerGrupos(req, res) {
       where: {
         cuenta_idpadre: null,
       },
+      order: [["cuenta_codigonivel", "ASC"]],
     })
       .then((result) => {
-        const grupos= result.map((grupo) => ({
-              cuenta_id: grupo.cuenta_id,
-              texto: `${grupo.cuenta_codigonivel} ${grupo.cuenta_descripcion}`,
+        const grupos = result.map((grupo) => ({
+          cuenta_id: grupo.cuenta_id,
+          texto: `${grupo.cuenta_codigonivel} ${grupo.cuenta_descripcion}`,
         }));
         res.status(200).json(grupos);
       })
@@ -50,14 +51,10 @@ async function obtenerCuentasHijas(req, res) {
       where: {
         cuenta_idpadre: id,
       },
-      order:[
-        ["cuenta_codigonivel", "ASC"]
-      ]
-       
-      
+      order: [["cuenta_codigonivel", "ASC"]],
     })
       .then((result) => {
-        const cuentas=result.map((cuenta) => ({
+        const cuentas = result.map((cuenta) => ({
           cuenta_id: cuenta.cuenta_id,
           texto: `${cuenta.cuenta_codigopadre}.${cuenta.cuenta_codigonivel} ${cuenta.cuenta_descripcion}`,
         }));
@@ -67,9 +64,10 @@ async function obtenerCuentasHijas(req, res) {
         console.log(e);
         return res.status(404).json({ error: "Cuentas no encontradas" });
       });
-
   } catch (error) {
-    res.status(500).json({ error: "Error en el servidor", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Error en el servidor", details: error.message });
   }
 }
 
@@ -97,22 +95,81 @@ async function obtenerCuenta(req, res) {
 
 async function obtenerCuentas(req, res) {
   try {
-   await ModuleSQL.Cuenta.findAll().then(
-    (result)=>{
+    await ModuleSQL.Cuenta.findAll()
+      .then((result) => {
         return res.status(200).json(result);
-    }
-   ).catch(
-    (e)=>{
+      })
+      .catch((e) => {
         console.log(e);
-        return res.status(404).json({error:"Cuentas no encontradas"});
-    }
-
-   );
+        return res.status(404).json({ error: "Cuentas no encontradas" });
+      });
   } catch (error) {
     res
       .status(500)
       .json({ error: "Error en el servidor", details: error.message });
   }
+}
+
+async function exportarCuentasExcel(req, res) {
+  try {
+    const resultados = []; 
+    //Obtener todas las cuentas de la BD
+    const cuentas = await ModuleSQL.Cuenta.findAll();
+    //Crear un mapa para almacenar las cuentas por su ID
+    const cuentasMap = new Map();
+    cuentas.forEach((cuenta) => {
+      cuentasMap.set(cuenta.cuenta_id, cuenta);
+    });
+    //Obtención de grupos
+    const grupos = cuentas.filter((cuenta) => cuenta.cuenta_idpadre === null)
+    .sort((a, b) => a.cuenta_codigonivel.localeCompare(b.cuenta_codigonivel));
+    //Función recursiva para explorar los hijos
+    grupos.forEach((grupo) => {
+      resultados.push({
+        codigoCuenta: grupo.cuenta_codigonivel,
+        cuentaContable: grupo.cuenta_descripcion,
+        Naturaleza: grupo.cuenta_naturaleza,
+      });
+      // Obtener los hijos del grupo principal
+      const hijos = Array.from(cuentasMap.values())
+        .filter((cuenta) => cuenta.cuenta_idpadre === grupo.cuenta_id)
+        .sort((a, b) =>
+          a.cuenta_codigonivel.localeCompare(b.cuenta_codigonivel)
+        );
+
+      // Explorar los hijos recursivamente
+      explorarHijos(hijos, cuentasMap, resultados);
+    });
+
+    console.log("Los resultados son ", resultados);
+
+    return res.status(200).json(resultados);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Error en el servidor", details: error.message });
+  }
+}
+
+function explorarHijos(hijos, mapaCuentas, resultados) {
+  if (!hijos || hijos.length === 0){
+    return;
+  } 
+  hijos.forEach((hijo) => {
+    const codigoCuenta = `${hijo.cuenta_codigopadre}.${hijo.cuenta_codigonivel}`;
+    resultados.push({
+     codigoCuenta: codigoCuenta,
+     cuentaContable: hijo.cuenta_descripcion,
+      Naturaleza: hijo.cuenta_naturaleza,
+    });
+
+    const hijosDelHijo = Array.from(mapaCuentas.values())
+      .filter((cuenta) => cuenta.cuenta_idpadre === hijo.cuenta_id)
+      .sort((a, b) => a.cuenta_codigonivel.localeCompare(b.cuenta_codigonivel));
+
+    // Llamada recursiva para explorar los hijos del hijo
+    explorarHijos(hijosDelHijo, mapaCuentas, resultados);
+  });
 }
 
 module.exports = {
@@ -121,4 +178,5 @@ module.exports = {
   obtenerCuentasHijas,
   obtenerCuentas,
   obtenerCuenta,
+  exportarCuentasExcel,
 };
