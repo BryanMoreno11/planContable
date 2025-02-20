@@ -34,10 +34,19 @@ export class PlancuentaComponent implements OnInit {
   }
 
   cargarNodosPrincipales() {
-    this._planCuentaService.getGrupos().subscribe((data) => {
-      const nodes = data.map((item) => this._transformer(item, 0));
-      this.dataNodes.next(nodes);
-    });
+    this._planCuentaService.getGrupos().subscribe(
+      {
+        next:(data:Nodo_Cuenta[])=>{
+          const nodes = data.map((item) => this._transformer(item, 0));
+          this.dataNodes.next(nodes);
+        },
+        error:(error)=>{
+          console.log("Error al cargar los nodos principales", error);
+        },
+        complete:()=>{
+          console.log("Carga de nodos principales completada");
+        }
+      });
   }
 
   cargarHijos(nodo: ExampleFlatNode): void {
@@ -61,13 +70,11 @@ export class PlancuentaComponent implements OnInit {
       return;
     }
 
-
-    
     if (!nodo.isLoading && nodo.expandable && !nodo.expanded) {
       nodo.isLoading = true;
         nodo.expanded=true;
         this._planCuentaService.getCuentas(nodo.id).subscribe({
-          next:(hijos:any) =>{
+          next:(hijos:Nodo_Cuenta[]) =>{
             const currentData = this.dataNodes.getValue();
             const parentIndex = currentData.findIndex(n => n.id === nodo.id);
             

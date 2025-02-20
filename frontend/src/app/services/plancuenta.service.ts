@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Cuenta, Nodo_Cuenta } from '../interfaces/Cuenta';
 
 
 @Injectable({
@@ -10,18 +8,19 @@ import { Cuenta, Nodo_Cuenta } from '../interfaces/Cuenta';
 export class PlancuentaService {
 
   constructor(private _httpClient: HttpClient) { }
+  private API_URL = 'http://localhost:3000/api/';
 
   getGrupos() {
-    return this._httpClient.get<Nodo_Cuenta[]>('http://localhost:3000/api/cuentas/grupos');
+    return this._httpClient.get<any>(`${this.API_URL}cuentas/grupos`);
   }
 
   getCuentas(id_padre:number) {
-    return this._httpClient.get<Nodo_Cuenta[]>(`http://localhost:3000/api/cuentas/hijas/${id_padre}`);
+    return this._httpClient.get<any>(`${this.API_URL}cuentas/hijas/${id_padre}`);
   }
 
 
   getCuenta(id_cuenta:number) {
-    return this._httpClient.get<Cuenta>(`http://localhost:3000/api/cuenta/${id_cuenta}`);
+    return this._httpClient.get<any>(`${this.API_URL}cuenta/${id_cuenta}`);
   }
 
 

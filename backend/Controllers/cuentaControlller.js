@@ -50,6 +50,11 @@ async function obtenerCuentasHijas(req, res) {
       where: {
         cuenta_idpadre: id,
       },
+      order:[
+        ["cuenta_codigonivel", "ASC"]
+      ]
+       
+      
     })
       .then((result) => {
         const cuentas=result.map((cuenta) => ({
@@ -62,7 +67,6 @@ async function obtenerCuentasHijas(req, res) {
         console.log(e);
         return res.status(404).json({ error: "Cuentas no encontradas" });
       });
-      return res.status(200).json({message: "Cuenta creada correctamente"});
 
   } catch (error) {
     res.status(500).json({ error: "Error en el servidor", details: error.message });

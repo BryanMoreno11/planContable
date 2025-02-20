@@ -24,7 +24,7 @@ const Cuenta = sequelize.define('Cuenta',{
           type: DataTypes.STRING(100),
           allowNull: true
         },
-        cuenta_padre: {
+        cuenta_padredescripcion: {
           type: DataTypes.STRING(100),
           allowNull: true
         },
