@@ -67,37 +67,15 @@ export class PlancuentaComponent implements OnInit {
   cargarHijos(nodo: ExampleFlatNode): void {
 
     if(nodo.expanded){
-      nodo.expanded = false;
-      const currentData = this.dataNodes.getValue();
-      const parentIndex = currentData.findIndex(n => n.id === nodo.id);
-      if (parentIndex !== -1) {
-        let removeCount=0;
-        for(let i= parentIndex+1; i<currentData.length;i++){
-          if(currentData[i].level<=nodo.level){
-            break;
-          }
-          removeCount++;
-        }
-        currentData.splice(parentIndex+1, removeCount);
-        this.dataNodes.next([...currentData]);
-      }
+      this.eliminarCuentasHijasPadre(nodo);
       return;
     }
 
     if (!nodo.isLoading && nodo.expandable && !nodo.expanded) {
       nodo.isLoading = true;
-        nodo.expanded=true;
         this._planCuentaService.getCuentas(nodo.id).subscribe({
           next:(hijos:Cuenta[]) =>{
-            const currentData = this.dataNodes.getValue();
-            const parentIndex = currentData.findIndex(n => n.id === nodo.id);
-            
-            if (parentIndex !== -1) {
-              const newNodes = hijos.map((hijo:any) => this._transformer(hijo, nodo.level+1));
-              currentData.splice(parentIndex + 1, 0, ...newNodes);
-              this.dataNodes.next([...currentData]);  
-              console.log("Los nodos son ", currentData);
-            }
+           this.insertarCuentasHijasPadre(hijos, nodo);
             nodo.isLoading = false;
           },
           error: (error) => {
@@ -165,15 +143,11 @@ export class PlancuentaComponent implements OnInit {
         && n.level === cuentaPadre.level+1
       ).length+1);
     }else if(cuentaPadre && !cuentaPadre.expanded){
-      console.log("No ha sido expandido");
-
       this._planCuentaService.getCuentas(cuentaPadre.cuenta.cuenta_id).subscribe(
         {
           next:(hijos:Cuenta[])=>{
 
             this.cuentaForm.get('cuenta_codigonivel')?.setValue(hijos.length+1);
-            this.insertarCuentasHijasArbol(hijos, cuentaPadre);
-            cuentaPadre.expanded=true;
           },
           error:(error)=>{
             console.log("Error al cargar los hijos", error);
@@ -191,8 +165,10 @@ export class PlancuentaComponent implements OnInit {
 
 
   closeModal() {
+    console.log("Cerrando modal");  
     this.isModalOpen = false;
     this.cuentaPadre=null;
+    this.cuentaForm.reset();
   }
 
 
@@ -203,35 +179,49 @@ export class PlancuentaComponent implements OnInit {
 
     if(this.cuentaForm.valid){
       let cuenta:Cuenta= this.cuentaForm.value;
+      cuenta.cuenta_descripcion=cuenta.cuenta_descripcion.toUpperCase();
       if(this.cuentaPadre){
-        cuenta={
-          cuenta_id:0,
-          cuenta_grupo: this.cuentaPadre.cuenta.cuenta_grupo,
-          cuenta_idpadre: this.cuentaPadre.cuenta.cuenta_id,
-          cuenta_codigopadre: this.cuentaPadre.cuenta.cuenta_codigonivel,
-          cuenta_padredescripcion: this.cuentaPadre.cuenta.cuenta_descripcion,
-          cuenta_codigonivel: this.cuentaForm.get('cuenta_codigonivel')?.value,
-          cuenta_descripcion: this.cuentaForm.get('cuenta_descripcion')?.value,
-          cuenta_esdebito: this.cuentaForm.get('cuenta_esdebito')?.value,
-          texto:""
-        }
+        cuenta.cuenta_grupo=this.cuentaPadre.cuenta.cuenta_grupo;
+        cuenta.cuenta_idpadre=this.cuentaPadre.cuenta.cuenta_id;
+        cuenta.cuenta_codigopadre = this.cuentaPadre.cuenta.cuenta_codigopadre
+        ? `${this.cuentaPadre.cuenta.cuenta_codigopadre}.${this.cuentaPadre.cuenta.cuenta_codigonivel}`
+        : `${this.cuentaPadre.cuenta.cuenta_codigonivel}`;
+              cuenta.cuenta_padredescripcion=this.cuentaPadre.cuenta.cuenta_descripcion;
       }
-
-      console.log("La cuenta que se va a insertar es ", cuenta);
-
-
+      
       this._planCuentaService.crearCuenta(cuenta).subscribe(
         {
           next:(data:any)=>{
           console.log("Cuenta creada con éxito", data);
-           this.cargarNodosPrincipales();
-           this.closeModal();
+            if(this.cuentaPadre){
+              this._planCuentaService.getCuentas(this.cuentaPadre.cuenta.cuenta_id).subscribe(
+                {
+                  next:(hijos:Cuenta[])=>{
+                    this.eliminarCuentasHijasPadre(this.cuentaPadre!);
+                    this.insertarCuentasHijasPadre(hijos, this.cuentaPadre!);
+                    this.closeModal();
+                  },
+                  error:(error)=>{
+                    console.log("Error al cargar los hijos", error);
+                  },
+                  complete:()=>{
+                    console.log("Carga de hijos completada");
+                  }
+                }
+              );
+            }else{
+              this.cargarNodosPrincipales();
+              this.closeModal();
+
+
+            }
           },
           error:(error)=>{
             console.log("Error al crear la cuenta", error);
           },
           complete:()=>{
             console.log("Cuenta creada con éxito");
+
           }
         }
       );
@@ -240,12 +230,34 @@ export class PlancuentaComponent implements OnInit {
   }
 
 
-  insertarCuentasHijasArbol(cuentasHijas:Cuenta[], nodoPadre:ExampleFlatNode){
+  insertarCuentasHijasPadre(cuentasHijas:Cuenta[], nodoPadre:ExampleFlatNode){
     const currentData= this.dataNodes.getValue();
     const parentIndex = currentData.findIndex(n => n.id === nodoPadre.id);
-    const newNodes = cuentasHijas.map((hijo:any) => this._transformer(hijo, nodoPadre.level+1));
-    currentData.splice(parentIndex + 1, 0, ...newNodes);
-    this.dataNodes.next([...currentData]);  
+    if (parentIndex !== -1) {
+      const newNodes = cuentasHijas.map((hijo:any) => this._transformer(hijo, nodoPadre.level+1));
+      currentData.splice(parentIndex + 1, 0, ...newNodes);
+      this.dataNodes.next([...currentData]); 
+      nodoPadre.expanded=true; 
+    }
+  }
+
+
+  eliminarCuentasHijasPadre(nodoPadre:ExampleFlatNode){
+    const currentData = this.dataNodes.getValue();
+    const parentIndex = currentData.findIndex(n => n.id === nodoPadre.id);
+    if (parentIndex !== -1) {
+      let removeCount=0;
+      for(let i= parentIndex+1; i<currentData.length;i++){
+        if(currentData[i].level<=nodoPadre.level){
+          break;
+        }
+        removeCount++;
+      }
+      currentData.splice(parentIndex+1, removeCount);
+      this.dataNodes.next([...currentData]);
+      nodoPadre.expanded=false;
+    }
+
   }
 
 
