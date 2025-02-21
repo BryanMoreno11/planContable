@@ -12,8 +12,10 @@ async function crearCuenta(req, res) {
 
     await ModuleSQL.Cuenta.create(req.body)
       .then((cuenta) => {
-        return res.status(200).json({ message: "Cuenta creada correctamente" });
-        a;
+        return res.status(200).json({ message: "Cuenta creada correctamente",
+          id:cuenta.cuenta_id
+         });
+        
       })
       .catch((e) => {
         console.log(e);
@@ -26,6 +28,32 @@ async function crearCuenta(req, res) {
   }
 }
 
+
+async function actualizarCuenta(req, res){
+  try{
+    const {id}= req.params;
+    await SqlModule.Cuenta.update(req.body, {
+      where: {
+        cuenta_id: id,
+      },
+    })
+    .then((result) => {
+      return res.status(200).json({ message: "Cuenta actualizada correctamente" });
+    })
+    .catch((e) => {
+      console.log(e);
+      return res.status(404).json({ error: "Error al actualizar" });
+    });
+
+  }catch(err){
+    res
+      .status(500)
+      .json({ error: "Error en el servidor", details: error.message });
+  }
+
+
+
+}
 
 
 
@@ -207,4 +235,5 @@ module.exports = {
   obtenerCuentas,
   obtenerCuenta,
   exportarCuentasExcel,
+  actualizarCuenta
 };

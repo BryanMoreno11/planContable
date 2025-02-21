@@ -169,6 +169,7 @@ export class PlancuentaComponent implements OnInit {
     this.isModalOpen = false;
     this.cuentaPadre=null;
     this.cuentaForm.reset();
+    this.cuentaForm.patchValue({ cuenta_esdebito: true });
   }
 
 
@@ -192,7 +193,6 @@ export class PlancuentaComponent implements OnInit {
       this._planCuentaService.crearCuenta(cuenta).subscribe(
         {
           next:(data:any)=>{
-          console.log("Cuenta creada con éxito", data);
             if(this.cuentaPadre){
               this._planCuentaService.getCuentas(this.cuentaPadre.cuenta.cuenta_id).subscribe(
                 {

@@ -3,8 +3,10 @@ const router = Router();
 
 const {crearCuenta, obtenerCuentasHijas, obtenerGrupos,
     obtenerCuentas, obtenerCuenta, exportarCuentasExcel,
+    actualizarCuenta
 } = require("../../Controllers/cuentaControlller");
 router.post("/cuentas", crearCuenta);
+router.put("/cuentas/:id", actualizarCuenta);
 router.get("/cuentas", obtenerCuentas);
 router.get("/cuenta/:id", obtenerCuenta);
 router.get("/cuentas/grupos", obtenerGrupos);
