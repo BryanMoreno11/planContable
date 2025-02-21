@@ -49,12 +49,14 @@ const Cuenta = sequelize.define('Cuenta',{
 
 Cuenta.belongsTo(Cuenta, {
   foreignKey: "cuenta_idpadre",
-  as: "padre"
+  as: "padre",
+   onDelete: "CASCADE"
 });
 
 Cuenta.hasMany(Cuenta, {
   foreignKey: "cuenta_idpadre",
-  as: "hijos"
+  as: "hijos",
+  onDelete: "CASCADE"
 });
 
 const SqlModule = {

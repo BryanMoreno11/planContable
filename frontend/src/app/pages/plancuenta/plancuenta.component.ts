@@ -293,6 +293,45 @@ export class PlancuentaComponent implements OnInit {
   }
 
 
+  eliminarCuenta(cuenta:Cuenta){
+    this._planCuentaService.eliminarCuenta(cuenta.cuenta_id).subscribe(
+      {
+        next:(data:any)=>{
+         
+          if(cuenta.cuenta_idpadre){
+            this._planCuentaService.getCuentas(cuenta.cuenta_idpadre).subscribe(
+              {
+                next:(hijos:Cuenta[])=>{
+                  let cuentaPadre=this.dataNodes.value.find(n => n.cuenta.cuenta_id === Number(cuenta.cuenta_idpadre));
+                  this.eliminarCuentasHijasPadre(cuentaPadre!);
+                  this.insertarCuentasHijasPadre(hijos, cuentaPadre!);
+                  this.closeModal();
+                },
+                error:(error)=>{
+                  console.log("Error al cargar los hijos", error);
+                },
+                complete:()=>{
+                  console.log("Carga de hijos completada");
+                }
+              }
+            );
+          }else{
+            this.cargarNodosPrincipales();
+            this.closeModal();
+          }
+          
+        },
+        error:(error)=>{
+          console.log("Error al eliminar la cuenta", error);
+        },
+        complete:()=>{
+          console.log("Cuenta eliminada con éxito");
+        }
+      }
+    );
+  }
+
+
 
 
   insertarCuentasHijasPadre(cuentasHijas:Cuenta[], nodoPadre:ExampleFlatNode){
