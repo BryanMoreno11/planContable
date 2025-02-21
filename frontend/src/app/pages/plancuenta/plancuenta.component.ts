@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTreeModule} from '@angular/material/tree';
@@ -7,26 +7,40 @@ import { PlancuentaService } from '../../services/plancuenta.service';
 import { Cuenta, Nodo_Cuenta } from '../../interfaces/Cuenta';
 import { BehaviorSubject } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-plancuenta',
   standalone: true,
-  imports: [MatTreeModule,MatIconModule, MatButtonModule, FormsModule],
+  imports: [MatTreeModule,MatIconModule, MatButtonModule, FormsModule,
+    ReactiveFormsModule
+     
+  ],
   templateUrl: './plancuenta.component.html',
   styleUrl: './plancuenta.component.css'
 })
 export class PlancuentaComponent implements OnInit {
-
+  cuentaForm: FormGroup;
+  isModalOpen = false;
   treeControl: FlatTreeControl<ExampleFlatNode>;
   dataNodes = new BehaviorSubject<ExampleFlatNode[]>([]);
   cuenta:Cuenta= { } as Cuenta;
 
-  constructor(private _planCuentaService: PlancuentaService) {
+  constructor(private _planCuentaService: PlancuentaService, private fb: FormBuilder) {
     this.treeControl = new FlatTreeControl<ExampleFlatNode>(
       (node) => node.level,
       (node) => node.expandable
     );
+
+    this.cuentaForm = this.fb.group({
+      cuenta_codigonivel: ['', Validators.required],
+      cuenta_descripcion: ['', Validators.required],
+      cuenta_esdebito: [true, Validators.required]
+    });
+
+
+
   }
 
   ngOnInit(): void {
@@ -122,9 +136,7 @@ export class PlancuentaComponent implements OnInit {
 
   obtenerCuenta(id_cuenta:number){
     this._planCuentaService.getCuenta(id_cuenta).subscribe((data) => {
-      console.log("La data es ", data);
       this.cuenta = data;
-      console.log("La cuenta es ", this.cuenta);
     });
   }
 
@@ -141,7 +153,39 @@ export class PlancuentaComponent implements OnInit {
 
   hasChild = (_: number, node: ExampleFlatNode) => node.expandable;
     
-    
+  /*region Métodos para el modal */
+  
+  openModal() {
+    this.isModalOpen = true;
+    this.cuentaForm.get('cuenta_codigonivel')?.setValue(this.dataNodes.value.filter(n => n.level === 0).length+1);
+  }
+  closeModal() {
+    this.isModalOpen = false;
+  }
+
+
+
+
+
+  guardarCuenta() {
+    if(this.cuentaForm.valid){
+      this._planCuentaService.crearCuenta(this.cuentaForm.value).subscribe(
+        {
+          next:(data:any)=>{
+          console.log("Cuenta creada con éxito", data);
+           this.cargarNodosPrincipales();
+          },
+          error:(error)=>{
+            console.log("Error al crear la cuenta", error);
+          },
+          complete:()=>{
+            console.log("Cuenta creada con éxito");
+          }
+        }
+      );
+  
+    }
+  }
 
 
 
