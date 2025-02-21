@@ -43,6 +43,10 @@ export class PlancuentaService {
     return this._httpClient.put(`${this.API_URL}/cuentas`,cuenta);
   }
 
+  eliminarCuenta(id_cuenta:number){
+    return this._httpClient.delete(`${this.API_URL}/cuentas/${id_cuenta}`);
+  }
+
 
 
 }

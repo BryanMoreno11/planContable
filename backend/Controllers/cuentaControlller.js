@@ -156,6 +156,32 @@ async function obtenerCuentas(req, res) {
   }
 }
 
+async function eliminarCuenta(req, res){
+  try{
+    const { id } = req.params;
+    await ModuleSQL.Cuenta.destroy({
+      where: {
+        cuenta_id: id,
+      },
+    })
+    .then((result) => {
+      return res.status(200).json({ message: "Cuenta eliminada correctamente" });
+    })
+    .catch((e) => {
+      console.log(e);
+      return res.status(404).json({ error: "Error al eliminar" });
+    });
+  }catch(err){
+    res
+      .status(500)
+      .json({ error: "Error en el servidor", details: error.message });
+  }
+}
+
+
+
+
+
 async function exportarCuentasExcel(req, res) {
   try {
     const resultados = []; 
@@ -234,5 +260,6 @@ module.exports = {
   obtenerCuentas,
   obtenerCuenta,
   exportarCuentasExcel,
-  actualizarCuenta
+  actualizarCuenta,
+  eliminarCuenta
 };
