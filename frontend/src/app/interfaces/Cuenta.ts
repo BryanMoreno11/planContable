@@ -11,5 +11,12 @@ export interface Nodo_Cuenta {
     cuenta_padredescripcion: string;
     cuenta_codigonivel: string;
     cuenta_descripcion: string;
-    cuenta_naturaleza: string;
+    cuenta_esdebito: boolean;
   }
+
+  export interface Cuenta_Grupo {
+    cuenta_codigonivel:string,
+    cuenta_descripcion: string,
+    cuenta_esdebito: boolean
+  }
+

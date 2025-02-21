@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Cuenta_Grupo, Cuenta_Hija } from '../interfaces/Cuenta';
 
 
 @Injectable({
@@ -31,6 +32,11 @@ export class PlancuentaService {
 
 
     );
+  }
+
+  crearCuenta(cuenta:Cuenta_Grupo | Cuenta_Hija){
+    return this._httpClient.post(`${this.API_URL}/cuentas`,cuenta);
+
   }
 
 
