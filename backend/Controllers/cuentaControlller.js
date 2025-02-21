@@ -1,9 +1,15 @@
+const SqlModule = require("../sequelize/models");
 const ModuleSQL = require("../sequelize/models");
 const Xlsx= require("xlsx");
 
 
 async function crearCuenta(req, res) {
   try {
+    //Para la creación de grupos principales
+    if(req.body.cuenta_idpadre==null){
+      req.body.cuenta_grupo= req.body.cuenta_descripcion;
+    }
+
     await ModuleSQL.Cuenta.create(req.body)
       .then((cuenta) => {
         return res.status(200).json({ message: "Cuenta creada correctamente" });
@@ -19,6 +25,16 @@ async function crearCuenta(req, res) {
       .json({ error: "Error en el servidor", details: error.message });
   }
 }
+
+
+
+
+
+
+
+
+
+
 
 async function obtenerGrupos(req, res) {
   try {

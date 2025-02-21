@@ -6,7 +6,7 @@
         <mat-tree-node (click)="obtenerCuenta(node.id)"
           *matTreeNodeDef="let node; when: hasChild"
           matTreeNodePadding
-          matTreeNodeToggle
+          
           [cdkTreeNodeTypeaheadLabel]="node.name"
         >
           <button

@@ -52,7 +52,6 @@ export class PlancuentaComponent implements OnInit {
   cargarHijos(nodo: ExampleFlatNode): void {
 
     if(nodo.expanded){
-      this.treeControl.collapse(nodo);
       nodo.expanded = false;
       const currentData = this.dataNodes.getValue();
       const parentIndex = currentData.findIndex(n => n.id === nodo.id);
@@ -111,10 +110,10 @@ export class PlancuentaComponent implements OnInit {
           console.log('Excel generado con éxito');
         },
         error:(error)=>{
-          console.log("Error al generar el PDF", error);
+          console.log("Error al generar el Excel", error);
         },
         complete:()=>{
-          console.log("PDF generado con éxito");
+          console.log("Excel generado con éxito");
         }
       }
     )

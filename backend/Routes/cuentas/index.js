@@ -2,7 +2,7 @@ const {Router} = require("express");
 const router = Router();
 
 const {crearCuenta, obtenerCuentasHijas, obtenerGrupos,
-    obtenerCuentas, obtenerCuenta, exportarCuentasExcel
+    obtenerCuentas, obtenerCuenta, exportarCuentasExcel,
 } = require("../../Controllers/cuentaControlller");
 router.post("/cuentas", crearCuenta);
 router.get("/cuentas", obtenerCuentas);
