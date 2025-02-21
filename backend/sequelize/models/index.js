@@ -36,8 +36,8 @@ const Cuenta = sequelize.define('Cuenta',{
           type: DataTypes.STRING(500),
           allowNull: false
         },
-        cuenta_naturaleza: {
-          type: DataTypes.STRING(100),
+        cuenta_esdebito: {
+          type: DataTypes.BOOLEAN,
           allowNull: false
         }
      

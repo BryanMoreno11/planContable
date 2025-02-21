@@ -17,7 +17,7 @@ async function crearCuenta(req, res) {
       })
       .catch((e) => {
         console.log(e);
-        return res.status(404).json({ error: "Cuenta no encontrada" });
+        return res.status(404).json({ error: "Error al insertar" });
       });
   } catch (error) {
     res
@@ -140,7 +140,7 @@ async function exportarCuentasExcel(req, res) {
       resultados.push({
         codigoCuenta: grupo.cuenta_codigonivel,
         cuentaContable: grupo.cuenta_descripcion,
-        Naturaleza: grupo.cuenta_naturaleza,
+        Naturaleza: grupo.cuenta_esdebito ? "Debito" : "Credito",
       });
       const hijos = cuentas.filter((cuenta) => cuenta.cuenta_idpadre === grupo.cuenta_id)
         .sort((a, b) =>
@@ -169,7 +169,7 @@ function explorarHijos(hijos, cuentas, resultados) {
     resultados.push({
      codigoCuenta: codigoCuenta,
      cuentaContable: hijo.cuenta_descripcion,
-      Naturaleza: hijo.cuenta_naturaleza,
+      Naturaleza: hijo.cuenta_esdebito ? "Debito" : "Credito",
     });
 
     const hijosDelHijo = cuentas
