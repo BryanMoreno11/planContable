@@ -1,8 +1,3 @@
-export interface Nodo_Cuenta {
-    cuenta_id: number;
-    texto: string;
-  }
-
   export interface Cuenta {
     cuenta_id: number;
     cuenta_grupo: string;
@@ -12,6 +7,7 @@ export interface Nodo_Cuenta {
     cuenta_codigonivel: string;
     cuenta_descripcion: string;
     cuenta_esdebito: boolean;
+    texto: string;
   }
 
   export interface Cuenta_Grupo {

@@ -46,7 +46,7 @@ async function obtenerGrupos(req, res) {
     })
       .then((result) => {
         const grupos = result.map((grupo) => ({
-          cuenta_id: grupo.cuenta_id,
+          ...grupo.toJSON(),
           texto: `${grupo.cuenta_codigonivel} ${grupo.cuenta_descripcion}`,
         }));
         res.status(200).json(grupos);
@@ -73,6 +73,7 @@ async function obtenerCuentasHijas(req, res) {
     })
       .then((result) => {
         const cuentas = result.map((cuenta) => ({
+          ...cuenta.toJSON(),
           cuenta_id: cuenta.cuenta_id,
           texto: `${cuenta.cuenta_codigopadre}.${cuenta.cuenta_codigonivel} ${cuenta.cuenta_descripcion}`,
         }));

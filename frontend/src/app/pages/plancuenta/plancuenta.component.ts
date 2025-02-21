@@ -4,7 +4,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatTreeModule} from '@angular/material/tree';
 import { FlatTreeControl } from '@angular/cdk/tree';
 import { PlancuentaService } from '../../services/plancuenta.service';
-import { Cuenta, Nodo_Cuenta } from '../../interfaces/Cuenta';
+import { Cuenta } from '../../interfaces/Cuenta';
 import { BehaviorSubject } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -26,6 +26,7 @@ export class PlancuentaComponent implements OnInit {
   treeControl: FlatTreeControl<ExampleFlatNode>;
   dataNodes = new BehaviorSubject<ExampleFlatNode[]>([]);
   cuenta:Cuenta= { } as Cuenta;
+  cuentaPadre: ExampleFlatNode | null= null;
 
   constructor(private _planCuentaService: PlancuentaService, private fb: FormBuilder) {
     this.treeControl = new FlatTreeControl<ExampleFlatNode>(
@@ -50,7 +51,7 @@ export class PlancuentaComponent implements OnInit {
   cargarNodosPrincipales() {
     this._planCuentaService.getGrupos().subscribe(
       {
-        next:(data:Nodo_Cuenta[])=>{
+        next:(data:Cuenta[])=>{
           const nodes = data.map((item) => this._transformer(item, 0));
           this.dataNodes.next(nodes);
         },
@@ -87,7 +88,7 @@ export class PlancuentaComponent implements OnInit {
       nodo.isLoading = true;
         nodo.expanded=true;
         this._planCuentaService.getCuentas(nodo.id).subscribe({
-          next:(hijos:Nodo_Cuenta[]) =>{
+          next:(hijos:Cuenta[]) =>{
             const currentData = this.dataNodes.getValue();
             const parentIndex = currentData.findIndex(n => n.id === nodo.id);
             
@@ -140,14 +141,14 @@ export class PlancuentaComponent implements OnInit {
     });
   }
 
-  private _transformer(node: Nodo_Cuenta, level: number): ExampleFlatNode {
+  private _transformer(node: Cuenta, level: number): ExampleFlatNode {
     return {
       id: node.cuenta_id,
-      name: node.texto,
       level: level,
       expandable: true,
       isLoading: false,
       expanded:false,
+      cuenta: node
     };
   }
 
@@ -155,25 +156,76 @@ export class PlancuentaComponent implements OnInit {
     
   /*region Métodos para el modal */
   
-  openModal() {
+  openModal(cuentaPadre?:ExampleFlatNode) {
     this.isModalOpen = true;
+    this.cuentaPadre=cuentaPadre || null;
     this.cuentaForm.get('cuenta_codigonivel')?.setValue(this.dataNodes.value.filter(n => n.level === 0).length+1);
+    if(cuentaPadre && cuentaPadre.expanded){
+      this.cuentaForm.get('cuenta_codigonivel')?.setValue(this.dataNodes.value.filter(n => n.cuenta.cuenta_idpadre === cuentaPadre.cuenta.cuenta_id
+        && n.level === cuentaPadre.level+1
+      ).length+1);
+    }else if(cuentaPadre && !cuentaPadre.expanded){
+      console.log("No ha sido expandido");
+
+      this._planCuentaService.getCuentas(cuentaPadre.cuenta.cuenta_id).subscribe(
+        {
+          next:(hijos:Cuenta[])=>{
+
+            this.cuentaForm.get('cuenta_codigonivel')?.setValue(hijos.length+1);
+            this.insertarCuentasHijasArbol(hijos, cuentaPadre);
+            cuentaPadre.expanded=true;
+          },
+          error:(error)=>{
+            console.log("Error al cargar los hijos", error);
+          },
+          complete:()=>{
+            console.log("Carga de hijos completada");
+          }
+        }
+      );
+
+    }
   }
+
+
+
+
   closeModal() {
     this.isModalOpen = false;
+    this.cuentaPadre=null;
   }
 
 
 
 
 
-  guardarCuenta() {
+  guardarCuenta() { 
+
     if(this.cuentaForm.valid){
-      this._planCuentaService.crearCuenta(this.cuentaForm.value).subscribe(
+      let cuenta:Cuenta= this.cuentaForm.value;
+      if(this.cuentaPadre){
+        cuenta={
+          cuenta_id:0,
+          cuenta_grupo: this.cuentaPadre.cuenta.cuenta_grupo,
+          cuenta_idpadre: this.cuentaPadre.cuenta.cuenta_id,
+          cuenta_codigopadre: this.cuentaPadre.cuenta.cuenta_codigonivel,
+          cuenta_padredescripcion: this.cuentaPadre.cuenta.cuenta_descripcion,
+          cuenta_codigonivel: this.cuentaForm.get('cuenta_codigonivel')?.value,
+          cuenta_descripcion: this.cuentaForm.get('cuenta_descripcion')?.value,
+          cuenta_esdebito: this.cuentaForm.get('cuenta_esdebito')?.value,
+          texto:""
+        }
+      }
+
+      console.log("La cuenta que se va a insertar es ", cuenta);
+
+
+      this._planCuentaService.crearCuenta(cuenta).subscribe(
         {
           next:(data:any)=>{
           console.log("Cuenta creada con éxito", data);
            this.cargarNodosPrincipales();
+           this.closeModal();
           },
           error:(error)=>{
             console.log("Error al crear la cuenta", error);
@@ -188,7 +240,13 @@ export class PlancuentaComponent implements OnInit {
   }
 
 
-
+  insertarCuentasHijasArbol(cuentasHijas:Cuenta[], nodoPadre:ExampleFlatNode){
+    const currentData= this.dataNodes.getValue();
+    const parentIndex = currentData.findIndex(n => n.id === nodoPadre.id);
+    const newNodes = cuentasHijas.map((hijo:any) => this._transformer(hijo, nodoPadre.level+1));
+    currentData.splice(parentIndex + 1, 0, ...newNodes);
+    this.dataNodes.next([...currentData]);  
+  }
 
 
 
@@ -203,10 +261,10 @@ export class PlancuentaComponent implements OnInit {
 
 interface ExampleFlatNode {
   expandable: boolean;
-  name: string;
   level: number;
   id: number;
   isLoading:boolean;
   expanded:boolean;
+  cuenta:Cuenta;
   
 }

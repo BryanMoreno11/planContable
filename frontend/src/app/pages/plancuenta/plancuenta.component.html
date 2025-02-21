@@ -5,7 +5,7 @@
       <button mat-button (click)="openModal()">Agregar Cuenta</button>
 
       <mat-tree #tree  [dataSource]="dataNodes" [treeControl]="treeControl">
-        <mat-tree-node (click)="obtenerCuenta(node.id)"
+        <mat-tree-node 
           *matTreeNodeDef="let node; when: hasChild"
           matTreeNodePadding
           
@@ -21,7 +21,8 @@
               {{ tree.isExpanded(node) ? "expand_more" : "chevron_right" }}
             </mat-icon>
           </button>
-          {{ node.name }}
+          <p (click)="obtenerCuenta(node.id)">{{ node.cuenta.texto }}</p>
+          <button class="ms-2" (click)="openModal(node)" >+</button>
          
         </mat-tree-node>
       </mat-tree>
