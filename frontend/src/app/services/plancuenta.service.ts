@@ -34,9 +34,13 @@ export class PlancuentaService {
     );
   }
 
-  crearCuenta(cuenta:Cuenta_Grupo | Cuenta){
+  crearCuenta(cuenta: Cuenta){
     return this._httpClient.post<any>(`${this.API_URL}/cuentas`,cuenta);
 
+  }
+
+  actualizarCuenta(cuenta: Cuenta){
+    return this._httpClient.put(`${this.API_URL}/cuentas`,cuenta);
   }
 
 

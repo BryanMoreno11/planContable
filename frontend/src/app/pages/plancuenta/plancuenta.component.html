@@ -2,7 +2,7 @@
   <div class="row gap-3">
     <button (click)="exportarExcel()">Exportar a Excel</button>
     <div class="planes col-12 col-md-6">
-      <button mat-button (click)="openModal()">Agregar Cuenta</button>
+      <button mat-button (click)="openModal(false); editCuenta=false">Agregar Cuenta</button>
 
       <mat-tree #tree  [dataSource]="dataNodes" [treeControl]="treeControl">
         <mat-tree-node 
@@ -22,7 +22,11 @@
             </mat-icon>
           </button>
           <p (click)="obtenerCuenta(node.id)">{{ node.cuenta.texto }}</p>
-          <button class="ms-2" (click)="openModal(node)" >+</button>
+          <button class="ms-2" (click)="openModal(false, node);" >+</button>
+
+          <button class="ms-2" mat-icon-button (click)="openModal( true, node);">
+            <mat-icon>edit</mat-icon>
+          </button>
          
         </mat-tree-node>
       </mat-tree>

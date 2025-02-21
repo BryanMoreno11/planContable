@@ -31,10 +31,9 @@ async function crearCuenta(req, res) {
 
 async function actualizarCuenta(req, res){
   try{
-    const {id}= req.params;
     await SqlModule.Cuenta.update(req.body, {
       where: {
-        cuenta_id: id,
+        cuenta_id: req.body.cuenta_id,
       },
     })
     .then((result) => {

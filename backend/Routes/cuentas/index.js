@@ -6,7 +6,7 @@ const {crearCuenta, obtenerCuentasHijas, obtenerGrupos,
     actualizarCuenta
 } = require("../../Controllers/cuentaControlller");
 router.post("/cuentas", crearCuenta);
-router.put("/cuentas/:id", actualizarCuenta);
+router.put("/cuentas", actualizarCuenta);
 router.get("/cuentas", obtenerCuentas);
 router.get("/cuenta/:id", obtenerCuenta);
 router.get("/cuentas/grupos", obtenerGrupos);

@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component,  OnInit } from '@angular/core';
 import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTreeModule} from '@angular/material/tree';
@@ -26,7 +26,8 @@ export class PlancuentaComponent implements OnInit {
   treeControl: FlatTreeControl<ExampleFlatNode>;
   dataNodes = new BehaviorSubject<ExampleFlatNode[]>([]);
   cuenta:Cuenta= { } as Cuenta;
-  cuentaPadre: ExampleFlatNode | null= null;
+  cuentaSeleccionada: ExampleFlatNode | null= null;
+  editCuenta:boolean=false;
 
   constructor(private _planCuentaService: PlancuentaService, private fb: FormBuilder) {
     this.treeControl = new FlatTreeControl<ExampleFlatNode>(
@@ -132,34 +133,46 @@ export class PlancuentaComponent implements OnInit {
 
   hasChild = (_: number, node: ExampleFlatNode) => node.expandable;
     
-  /*region Métodos para el modal */
   
-  openModal(cuentaPadre?:ExampleFlatNode) {
+  openModal(editCuenta:boolean, cuentaSeleccionada?: ExampleFlatNode ) {
+    this.cuentaSeleccionada = cuentaSeleccionada!;
+    this.editCuenta=editCuenta;
     this.isModalOpen = true;
-    this.cuentaPadre=cuentaPadre || null;
-    this.cuentaForm.get('cuenta_codigonivel')?.setValue(this.dataNodes.value.filter(n => n.level === 0).length+1);
-    if(cuentaPadre && cuentaPadre.expanded){
-      this.cuentaForm.get('cuenta_codigonivel')?.setValue(this.dataNodes.value.filter(n => n.cuenta.cuenta_idpadre === cuentaPadre.cuenta.cuenta_id
-        && n.level === cuentaPadre.level+1
-      ).length+1);
-    }else if(cuentaPadre && !cuentaPadre.expanded){
-      this._planCuentaService.getCuentas(cuentaPadre.cuenta.cuenta_id).subscribe(
-        {
-          next:(hijos:Cuenta[])=>{
-
-            this.cuentaForm.get('cuenta_codigonivel')?.setValue(hijos.length+1);
-          },
-          error:(error)=>{
-            console.log("Error al cargar los hijos", error);
-          },
-          complete:()=>{
-            console.log("Carga de hijos completada");
-          }
-        }
-      );
-
+    if (this.editCuenta==true) {
+      console.log("entro a editar");
+      this.cuentaForm.patchValue(cuentaSeleccionada!.cuenta);
+      return;
     }
+    this.setCodigoNivel(cuentaSeleccionada);
   }
+  
+   setCodigoNivel(cuentaPadre?: ExampleFlatNode) {
+
+    if (!cuentaPadre) {
+      this.cuentaForm.get('cuenta_codigonivel')?.setValue(this.dataNodes.value.filter(n => n.level === 0).length + 1);
+      return;
+    }
+  
+    if (cuentaPadre.expanded) {
+      const numero=this.dataNodes.value.filter(n => n.cuenta.cuenta_idpadre === cuentaPadre.cuenta.cuenta_id && n.level === cuentaPadre.level + 1).length + 1
+      const codigoNivel = numero < 10 ? numero.toString().padStart(2, '0') : numero.toString();
+      this.cuentaForm.get('cuenta_codigonivel')?.setValue(codigoNivel);
+    } else {
+      this._planCuentaService.getCuentas(cuentaPadre.cuenta.cuenta_id).subscribe({
+        next: (hijos: Cuenta[]) => {
+          const numero = hijos.length + 1;
+          const codigoNivel = numero < 10 ? numero.toString().padStart(2, '0') : numero.toString();
+          this.cuentaForm.get('cuenta_codigonivel')?.setValue(codigoNivel);
+        },
+        error: (error) => {
+          console.error("Error al cargar los hijos de la cuenta", cuentaPadre.cuenta.cuenta_id, error);
+        },
+        complete: () => console.log("Carga de hijos completada"),
+      });
+    }
+
+  }
+  
 
 
 
@@ -167,7 +180,7 @@ export class PlancuentaComponent implements OnInit {
   closeModal() {
     console.log("Cerrando modal");  
     this.isModalOpen = false;
-    this.cuentaPadre=null;
+    this.cuentaSeleccionada=null;
     this.cuentaForm.reset();
     this.cuentaForm.patchValue({ cuenta_esdebito: true });
   }
@@ -177,60 +190,113 @@ export class PlancuentaComponent implements OnInit {
 
 
   guardarCuenta() { 
-
     if(this.cuentaForm.valid){
       let cuenta:Cuenta= this.cuentaForm.value;
       cuenta.cuenta_descripcion=cuenta.cuenta_descripcion.toUpperCase();
-      if(this.cuentaPadre){
-        cuenta.cuenta_grupo=this.cuentaPadre.cuenta.cuenta_grupo;
-        cuenta.cuenta_idpadre=this.cuentaPadre.cuenta.cuenta_id;
-        cuenta.cuenta_codigopadre = this.cuentaPadre.cuenta.cuenta_codigopadre
-        ? `${this.cuentaPadre.cuenta.cuenta_codigopadre}.${this.cuentaPadre.cuenta.cuenta_codigonivel}`
-        : `${this.cuentaPadre.cuenta.cuenta_codigonivel}`;
-              cuenta.cuenta_padredescripcion=this.cuentaPadre.cuenta.cuenta_descripcion;
-      }
-      
-      this._planCuentaService.crearCuenta(cuenta).subscribe(
-        {
-          next:(data:any)=>{
-            if(this.cuentaPadre){
-              this._planCuentaService.getCuentas(this.cuentaPadre.cuenta.cuenta_id).subscribe(
-                {
-                  next:(hijos:Cuenta[])=>{
-                    this.eliminarCuentasHijasPadre(this.cuentaPadre!);
-                    this.insertarCuentasHijasPadre(hijos, this.cuentaPadre!);
-                    this.closeModal();
-                  },
-                  error:(error)=>{
-                    console.log("Error al cargar los hijos", error);
-                  },
-                  complete:()=>{
-                    console.log("Carga de hijos completada");
-                  }
-                }
-              );
-            }else{
-              this.cargarNodosPrincipales();
-              this.closeModal();
+      if(this.editCuenta){
+        cuenta.cuenta_id=this.cuentaSeleccionada!.cuenta.cuenta_id;
+        cuenta.cuenta_idpadre=this.cuentaSeleccionada!.cuenta.cuenta_idpadre;
+        this.modificarCuenta(cuenta);
+      }else{
+        if(this.cuentaSeleccionada){
 
-
-            }
-          },
-          error:(error)=>{
-            console.log("Error al crear la cuenta", error);
-          },
-          complete:()=>{
-            console.log("Cuenta creada con éxito");
-
-          }
+          cuenta.cuenta_grupo=this.cuentaSeleccionada.cuenta.cuenta_grupo;
+          cuenta.cuenta_idpadre=this.cuentaSeleccionada.cuenta.cuenta_id;
+          cuenta.cuenta_codigopadre = this.cuentaSeleccionada.cuenta.cuenta_codigopadre
+          ? `${this.cuentaSeleccionada.cuenta.cuenta_codigopadre}.${this.cuentaSeleccionada.cuenta.cuenta_codigonivel}`
+          : `${this.cuentaSeleccionada.cuenta.cuenta_codigonivel}`;
+                cuenta.cuenta_padredescripcion=this.cuentaSeleccionada.cuenta.cuenta_descripcion;
         }
-      );
-  
+        this.crearCuenta(cuenta);
+      }
+
     }
+
   }
 
 
+  crearCuenta(cuenta:Cuenta){
+    this._planCuentaService.crearCuenta(cuenta).subscribe(
+      {
+        next:(data:any)=>{
+          if(this.cuentaSeleccionada){
+            this._planCuentaService.getCuentas(this.cuentaSeleccionada.cuenta.cuenta_id).subscribe(
+              {
+                next:(hijos:Cuenta[])=>{
+                  this.eliminarCuentasHijasPadre(this.cuentaSeleccionada!);
+                  this.insertarCuentasHijasPadre(hijos, this.cuentaSeleccionada!);
+                  this.closeModal();
+                },
+                error:(error)=>{
+                  console.log("Error al cargar los hijos", error);
+                },
+                complete:()=>{
+                  console.log("Carga de hijos completada");
+                }
+              }
+            );
+          }else{
+            this.cargarNodosPrincipales();
+            this.closeModal();
+          }
+        },
+        error:(error)=>{
+          console.log("Error al crear la cuenta", error);
+        },
+        complete:()=>{
+          console.log("Cuenta creada con éxito");
+
+        }
+      }
+    );
+  }
+
+
+  modificarCuenta(cuenta:Cuenta){
+    this._planCuentaService.actualizarCuenta(cuenta).subscribe(
+      {
+        next:(data:any)=>{
+
+
+          if(cuenta.cuenta_idpadre){
+            console.log("El id padre es: ",cuenta.cuenta_idpadre);
+            this._planCuentaService.getCuentas(cuenta.cuenta_idpadre).subscribe(
+              {
+                next:(hijos:Cuenta[])=>{
+                  let cuentaPadre=this.dataNodes.value.find(n => n.cuenta.cuenta_id === Number(cuenta.cuenta_idpadre));
+                  this.eliminarCuentasHijasPadre(cuentaPadre!);
+                  this.insertarCuentasHijasPadre(hijos, cuentaPadre!);
+                  this.closeModal();
+                },
+                error:(error)=>{
+                  console.log("Error al cargar los hijos", error);
+                },
+                complete:()=>{
+                  console.log("Carga de hijos completada");
+                }
+              }
+            );
+          }else{
+            this.cargarNodosPrincipales();
+            this.closeModal();
+          }
+        },
+        error:(error)=>{
+          console.log("Error al crear la cuenta", error);
+        },
+        complete:()=>{
+          console.log("Cuenta creada con éxito");
+
+        }
+      }
+    );
+  }
+
+
+
+
   insertarCuentasHijasPadre(cuentasHijas:Cuenta[], nodoPadre:ExampleFlatNode){
+    console.log("El padre es ", nodoPadre);
     const currentData= this.dataNodes.getValue();
     const parentIndex = currentData.findIndex(n => n.id === nodoPadre.id);
     if (parentIndex !== -1) {
