@@ -1,0 +1,31 @@
+<div class="modal-overlay" (click)="onClose()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editMode ? 'Editar' : 'Agregar' }} Cuenta</h2>
+        <button class="close-btn" (click)="onClose()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="cuentaForm" (ngSubmit)="onSubmit()">
+          <div class="mb-3">
+            <label for="codigoNivel" class="form-label">Código Nivel</label>
+            <input readonly type="text" id="codigoNivel" formControlName="cuenta_codigonivel" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="descripcion" class="form-label">Descripción</label>
+            <input type="text" id="descripcion" formControlName="cuenta_descripcion" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="naturaleza" class="form-label">Naturaleza</label>
+            <select id="naturaleza" formControlName="cuenta_esdebito" class="form-control">
+              <option [value]="true">Débito</option>
+              <option [value]="false">Crédito</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">{{ editMode ? 'Actualizar' : 'Guardar' }}</button>
+            <button type="button" class="btn btn-secondary" (click)="onClose()">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>

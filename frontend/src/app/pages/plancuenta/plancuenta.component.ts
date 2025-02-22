@@ -5,49 +5,57 @@ import {MatTreeModule} from '@angular/material/tree';
 import { FlatTreeControl } from '@angular/cdk/tree';
 import { PlancuentaService } from '../../services/plancuenta.service';
 import { Cuenta } from '../../interfaces/Cuenta';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder} from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
+import { ModalCuentaComponent } from '../modal-cuenta/modal-cuenta.component';
+
+
 
 @Component({
   selector: 'app-plancuenta',
   standalone: true,
   imports: [MatTreeModule,MatIconModule, MatButtonModule, FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule, ModalCuentaComponent
      
   ],
   templateUrl: './plancuenta.component.html',
   styleUrl: './plancuenta.component.css'
 })
 export class PlancuentaComponent implements OnInit {
-  cuentaForm: FormGroup;
   isModalOpen = false;
-  treeControl: FlatTreeControl<ExampleFlatNode>;
-  dataNodes = new BehaviorSubject<ExampleFlatNode[]>([]);
+  codigoNivel: string = '';
   cuenta:Cuenta= { } as Cuenta;
   cuentaSeleccionada: ExampleFlatNode | null= null;
   editCuenta:boolean=false;
+  treeControl: FlatTreeControl<ExampleFlatNode>;
+  dataNodes = new BehaviorSubject<ExampleFlatNode[]>([]);
+  
 
   constructor(private _planCuentaService: PlancuentaService, private fb: FormBuilder) {
     this.treeControl = new FlatTreeControl<ExampleFlatNode>(
       (node) => node.level,
       (node) => node.expandable
     );
-
-    this.cuentaForm = this.fb.group({
-      cuenta_codigonivel: ['', Validators.required],
-      cuenta_descripcion: ['', Validators.required],
-      cuenta_esdebito: [true, Validators.required]
-    });
-
-
-
   }
 
   ngOnInit(): void {
     this.cargarNodosPrincipales();
   }
+
+  private _transformer(node: Cuenta, level: number): ExampleFlatNode {
+    return {
+      id: node.cuenta_id,
+      level: level,
+      expandable: true,
+      isLoading: false,
+      expanded:false,
+      cuenta: node
+    };
+  }
+
+  hasChild = (_: number, node: ExampleFlatNode) => node.expandable;
 
   cargarNodosPrincipales() {
     this._planCuentaService.getGrupos().subscribe(
@@ -66,7 +74,6 @@ export class PlancuentaComponent implements OnInit {
   }
 
   cargarHijos(nodo: ExampleFlatNode): void {
-
     if(nodo.expanded){
       this.eliminarCuentasHijasPadre(nodo);
       return;
@@ -74,7 +81,8 @@ export class PlancuentaComponent implements OnInit {
     if (!nodo.isLoading && nodo.expandable && !nodo.expanded) {
       nodo.isLoading = true;
         this._planCuentaService.getCuentas(nodo.id).subscribe({
-          next:(hijos:Cuenta[]) =>{
+          next:(res) =>{
+            let hijos = res as Cuenta[];
            this.insertarCuentasHijasPadre(hijos, nodo);
             nodo.isLoading = false;
           },
@@ -119,32 +127,21 @@ export class PlancuentaComponent implements OnInit {
     });
   }
 
-  private _transformer(node: Cuenta, level: number): ExampleFlatNode {
-    return {
-      id: node.cuenta_id,
-      level: level,
-      expandable: true,
-      isLoading: false,
-      expanded:false,
-      cuenta: node
-    };
-  }
-
-  hasChild = (_: number, node: ExampleFlatNode) => node.expandable;
+  
     
   
-  openModal(editCuenta:boolean, cuentaSeleccionada?: ExampleFlatNode ) {
+  async openModal(editCuenta:boolean, cuentaSeleccionada?: ExampleFlatNode ) {
     this.cuentaSeleccionada = cuentaSeleccionada!;
     this.editCuenta=editCuenta;
-    this.isModalOpen = true;
-    if (this.editCuenta==true) {
-      this.cuentaForm.patchValue(cuentaSeleccionada!.cuenta);
-      return;
+    if (!editCuenta) {
+      this.codigoNivel = await this.setCodigoNivel(cuentaSeleccionada);
+
     }
-    this.setCodigoNivel(cuentaSeleccionada);
+    this.isModalOpen = true;
+
   }
   
-  setCodigoNivel(cuentaPadre?: ExampleFlatNode) {
+  async setCodigoNivel(cuentaPadre?: ExampleFlatNode):Promise<string> {
     const getCodigoFaltante = (codigos: string[], raiz:boolean): string => {
       const numeros = codigos
         .map(codigo => parseInt(codigo, 10))
@@ -153,7 +150,6 @@ export class PlancuentaComponent implements OnInit {
       let esperado = 1;
       for (const num of numeros) {
         if (num !== esperado) {
-          // Retornar el número esperado formateado (ej. "03")
           return raiz==true?esperado.toString():esperado < 10 ? esperado.toString().padStart(2, '0') : esperado.toString();
         }
         esperado++;
@@ -162,80 +158,50 @@ export class PlancuentaComponent implements OnInit {
     };
   
     if (!cuentaPadre) {
+      // Si no hay cuentaPadre, se obtienen los nodos raíz
       const nodosRaiz = this.dataNodes.value.filter(n => n.level === 0);
       const codigos = nodosRaiz.map(n => n.cuenta.cuenta_codigonivel);
       const codigoNivel = getCodigoFaltante(codigos, true);
-      this.cuentaForm.get('cuenta_codigonivel')?.setValue(codigoNivel);
-      return;
+      return codigoNivel;
     }
   
     if (cuentaPadre.expanded) {
-      // Si la cuenta padre está expandida, se obtienen los hijos del arreglo local
+      // Si está expandida, se obtienen los hijos mediante el arreglo de nodos
       const nodosHijos = this.dataNodes.value.filter(
         n => n.cuenta.cuenta_idpadre === cuentaPadre.cuenta.cuenta_id &&
              n.level === cuentaPadre.level + 1
       );
       const codigos = nodosHijos.map(n => n.cuenta.cuenta_codigonivel);
       const codigoNivel = getCodigoFaltante(codigos, false);
-      this.cuentaForm.get('cuenta_codigonivel')?.setValue(codigoNivel);
+      return codigoNivel;
     } else {
-      // Si no está expandida, se obtienen los hijos mediante el servicio
-      this._planCuentaService.getCuentas(cuentaPadre.cuenta.cuenta_id).subscribe({
-        next: (hijos: Cuenta[]) => {
-          const codigos = hijos.map(hijo => hijo.cuenta_codigonivel);
-          const codigoNivel = getCodigoFaltante(codigos,false);
-          this.cuentaForm.get('cuenta_codigonivel')?.setValue(codigoNivel);
-        },
-        error: (error) => {
-          console.error("Error al cargar los hijos de la cuenta", cuentaPadre.cuenta.cuenta_id, error);
-        },
-        complete: () => console.log("Carga de hijos completada"),
-      });
+      try {
+        const hijos = await firstValueFrom(this._planCuentaService.getCuentas(cuentaPadre.cuenta.cuenta_id)) as Cuenta[];
+        const codigos = hijos.map(hijo => hijo.cuenta_codigonivel);
+        const codigoNivel = getCodigoFaltante(codigos, false);
+        return codigoNivel;
+      } catch (error) {
+        console.error("Error al cargar los hijos de la cuenta", cuentaPadre.cuenta.cuenta_id, error);
     }
   }
-  
-  
-
-
-
+  return "";
+}
 
   closeModal() {
-    console.log("Cerrando modal");  
     this.isModalOpen = false;
-    this.cuentaSeleccionada=null;
-    this.cuentaForm.reset();
-    this.cuentaForm.patchValue({ cuenta_esdebito: true });
+    this.cuentaSeleccionada=null;   
   }
 
 
 
-
-
-  guardarCuenta() { 
-    if(this.cuentaForm.valid){
-      let cuenta:Cuenta= this.cuentaForm.value;
-      cuenta.cuenta_descripcion=cuenta.cuenta_descripcion.toUpperCase();
-      if(this.editCuenta){
-        cuenta.cuenta_id=this.cuentaSeleccionada!.cuenta.cuenta_id;
-        cuenta.cuenta_idpadre=this.cuentaSeleccionada!.cuenta.cuenta_idpadre;
-        this.modificarCuenta(cuenta);
-      }else{
-        if(this.cuentaSeleccionada){
-
-          cuenta.cuenta_grupo=this.cuentaSeleccionada.cuenta.cuenta_grupo;
-          cuenta.cuenta_idpadre=this.cuentaSeleccionada.cuenta.cuenta_id;
-          cuenta.cuenta_codigopadre = this.cuentaSeleccionada.cuenta.cuenta_codigopadre
-          ? `${this.cuentaSeleccionada.cuenta.cuenta_codigopadre}.${this.cuentaSeleccionada.cuenta.cuenta_codigonivel}`
-          : `${this.cuentaSeleccionada.cuenta.cuenta_codigonivel}`;
-                cuenta.cuenta_padredescripcion=this.cuentaSeleccionada.cuenta.cuenta_descripcion;
-        }
-        this.crearCuenta(cuenta);
-      }
-
+  handleSubmit(formData: Cuenta) {
+    if (this.editCuenta) {
+      formData.cuenta_id = this.cuentaSeleccionada!.cuenta.cuenta_id;
+      this.modificarCuenta(formData);
+    } else {
+      this.crearCuenta(formData);
     }
-
   }
-
 
   crearCuenta(cuenta:Cuenta){
     this._planCuentaService.crearCuenta(cuenta).subscribe(
@@ -244,7 +210,8 @@ export class PlancuentaComponent implements OnInit {
           if(this.cuentaSeleccionada){
             this._planCuentaService.getCuentas(this.cuentaSeleccionada.cuenta.cuenta_id).subscribe(
               {
-                next:(hijos:Cuenta[])=>{
+                next:(res)=>{
+                  let hijos = res as Cuenta[];
                   this.eliminarCuentasHijasPadre(this.cuentaSeleccionada!);
                   this.insertarCuentasHijasPadre(hijos, this.cuentaSeleccionada!);
                   this.closeModal();
@@ -284,7 +251,8 @@ export class PlancuentaComponent implements OnInit {
             console.log("El id padre es: ",cuenta.cuenta_idpadre);
             this._planCuentaService.getCuentas(cuenta.cuenta_idpadre).subscribe(
               {
-                next:(hijos:Cuenta[])=>{
+                next:(res)=>{
+                  let hijos= res as Cuenta[];
                   let cuentaPadre=this.dataNodes.value.find(n => n.cuenta.cuenta_id === Number(cuenta.cuenta_idpadre));
                   this.eliminarCuentasHijasPadre(cuentaPadre!);
                   this.insertarCuentasHijasPadre(hijos, cuentaPadre!);
@@ -323,7 +291,8 @@ export class PlancuentaComponent implements OnInit {
           if(cuenta.cuenta_idpadre){
             this._planCuentaService.getCuentas(cuenta.cuenta_idpadre).subscribe(
               {
-                next:(hijos:Cuenta[])=>{
+                next:(res)=>{
+                  let hijos= res as Cuenta[];
                   let cuentaPadre=this.dataNodes.value.find(n => n.cuenta.cuenta_id === Number(cuenta.cuenta_idpadre));
                   this.eliminarCuentasHijasPadre(cuentaPadre!);
                   this.insertarCuentasHijasPadre(hijos, cuentaPadre!);
@@ -353,11 +322,7 @@ export class PlancuentaComponent implements OnInit {
     );
   }
 
-
-
-
   insertarCuentasHijasPadre(cuentasHijas:Cuenta[], nodoPadre:ExampleFlatNode){
-    console.log("El padre es ", nodoPadre);
     const currentData= this.dataNodes.getValue();
     const parentIndex = currentData.findIndex(n => n.id === nodoPadre.id);
     if (parentIndex !== -1) {
@@ -367,7 +332,6 @@ export class PlancuentaComponent implements OnInit {
       nodoPadre.expanded=true; 
     }
   }
-
 
   eliminarCuentasHijasPadre(nodoPadre:ExampleFlatNode){
     const currentData = this.dataNodes.getValue();

@@ -67,37 +67,15 @@
 
 
 @if(isModalOpen){
-  <!-- Modal de Angular Material -->
-  <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-container" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Agregar Cuenta</h2>
-        <button class="close-btn" (click)="closeModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <form [formGroup]="cuentaForm" (ngSubmit)="guardarCuenta()">
-          <div class="mb-3">
-            <label for="codigoNivel" class="form-label">Código Nivel</label>
-            <input readonly type="text" id="codigoNivel" formControlName="cuenta_codigonivel" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label for="descripcion" class="form-label">Descripción</label>
-            <input type="text" id="descripcion" formControlName="cuenta_descripcion" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label for="naturaleza" class="form-label">Naturaleza</label>
-            <select id="naturaleza" formControlName="cuenta_esdebito" class="form-control">
-              <option [value]="true">Débito</option>
-              <option [value]="false">Crédito</option>
-            </select>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">Guardar</button>
-            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+ <app-modal-cuenta
+ [editMode]="editCuenta"
+ [codigoNivel]="codigoNivel"
+ [cuenta]="cuentaSeleccionada?.cuenta ??null"
+ (submitForm)="handleSubmit($event)"
+ (closeModal)="closeModal()"
+ 
+ 
+ >
+ </app-modal-cuenta>
 
 }

@@ -16,7 +16,7 @@ export class PlancuentaService {
   }
 
   getCuentas(id_padre:number) {
-    return this._httpClient.get<any>(`${this.API_URL}cuentas/hijas/${id_padre}`);
+    return this._httpClient.get(`${this.API_URL}cuentas/hijas/${id_padre}`);
   }
 
 
