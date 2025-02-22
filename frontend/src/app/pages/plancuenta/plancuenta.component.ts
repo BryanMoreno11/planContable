@@ -146,22 +146,52 @@ export class PlancuentaComponent implements OnInit {
     this.setCodigoNivel(cuentaSeleccionada);
   }
   
-   setCodigoNivel(cuentaPadre?: ExampleFlatNode) {
-
+  setCodigoNivel(cuentaPadre?: ExampleFlatNode) {
+    // Función auxiliar para obtener el código faltante formateado
+    const getCodigoFaltante = (codigos: string[], raiz:boolean): string => {
+      // Convertir los códigos a números y ordenarlos ascendentemente
+      const numeros = codigos
+        .map(codigo => parseInt(codigo, 10))
+        .sort((a, b) => a - b);
+  
+      let esperado = 1;
+      for (const num of numeros) {
+        if (num !== esperado) {
+          // Retornar el número esperado formateado (ej. "03")
+          return esperado < 10 ? esperado.toString().padStart(2, '0') : esperado.toString();
+        }
+        esperado++;
+      }
+      // Si la secuencia es completa, el nuevo código es (longitud + 1)
+      return raiz==true?esperado.toString():  esperado < 10  ? esperado.toString().padStart(2, '0') : esperado.toString();
+      
+    
+    };
+  
     if (!cuentaPadre) {
-      this.cuentaForm.get('cuenta_codigonivel')?.setValue(this.dataNodes.value.filter(n => n.level === 0).length + 1);
+      // Para el nivel raíz se filtran los nodos con level === 0
+      const nodosRaiz = this.dataNodes.value.filter(n => n.level === 0);
+      const codigos = nodosRaiz.map(n => n.cuenta.cuenta_codigonivel);
+      const codigoNivel = getCodigoFaltante(codigos, true);
+      this.cuentaForm.get('cuenta_codigonivel')?.setValue(codigoNivel);
       return;
     }
   
     if (cuentaPadre.expanded) {
-      const numero=this.dataNodes.value.filter(n => n.cuenta.cuenta_idpadre === cuentaPadre.cuenta.cuenta_id && n.level === cuentaPadre.level + 1).length + 1
-      const codigoNivel = numero < 10 ? numero.toString().padStart(2, '0') : numero.toString();
+      // Si la cuenta padre está expandida, se obtienen los hijos del arreglo local
+      const nodosHijos = this.dataNodes.value.filter(
+        n => n.cuenta.cuenta_idpadre === cuentaPadre.cuenta.cuenta_id &&
+             n.level === cuentaPadre.level + 1
+      );
+      const codigos = nodosHijos.map(n => n.cuenta.cuenta_codigonivel);
+      const codigoNivel = getCodigoFaltante(codigos, false);
       this.cuentaForm.get('cuenta_codigonivel')?.setValue(codigoNivel);
     } else {
+      // Si no está expandida, se obtienen los hijos mediante el servicio
       this._planCuentaService.getCuentas(cuentaPadre.cuenta.cuenta_id).subscribe({
         next: (hijos: Cuenta[]) => {
-          const numero = hijos.length + 1;
-          const codigoNivel = numero < 10 ? numero.toString().padStart(2, '0') : numero.toString();
+          const codigos = hijos.map(hijo => hijo.cuenta_codigonivel);
+          const codigoNivel = getCodigoFaltante(codigos,false);
           this.cuentaForm.get('cuenta_codigonivel')?.setValue(codigoNivel);
         },
         error: (error) => {
@@ -170,8 +200,8 @@ export class PlancuentaComponent implements OnInit {
         complete: () => console.log("Carga de hijos completada"),
       });
     }
-
   }
+  
   
 
 
