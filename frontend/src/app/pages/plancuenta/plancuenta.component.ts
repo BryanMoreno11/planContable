@@ -71,7 +71,6 @@ export class PlancuentaComponent implements OnInit {
       this.eliminarCuentasHijasPadre(nodo);
       return;
     }
-
     if (!nodo.isLoading && nodo.expandable && !nodo.expanded) {
       nodo.isLoading = true;
         this._planCuentaService.getCuentas(nodo.id).subscribe({
@@ -139,7 +138,6 @@ export class PlancuentaComponent implements OnInit {
     this.editCuenta=editCuenta;
     this.isModalOpen = true;
     if (this.editCuenta==true) {
-      console.log("entro a editar");
       this.cuentaForm.patchValue(cuentaSeleccionada!.cuenta);
       return;
     }
@@ -147,9 +145,7 @@ export class PlancuentaComponent implements OnInit {
   }
   
   setCodigoNivel(cuentaPadre?: ExampleFlatNode) {
-    // Función auxiliar para obtener el código faltante formateado
     const getCodigoFaltante = (codigos: string[], raiz:boolean): string => {
-      // Convertir los códigos a números y ordenarlos ascendentemente
       const numeros = codigos
         .map(codigo => parseInt(codigo, 10))
         .sort((a, b) => a - b);
@@ -158,18 +154,14 @@ export class PlancuentaComponent implements OnInit {
       for (const num of numeros) {
         if (num !== esperado) {
           // Retornar el número esperado formateado (ej. "03")
-          return esperado < 10 ? esperado.toString().padStart(2, '0') : esperado.toString();
+          return raiz==true?esperado.toString():esperado < 10 ? esperado.toString().padStart(2, '0') : esperado.toString();
         }
         esperado++;
       }
-      // Si la secuencia es completa, el nuevo código es (longitud + 1)
       return raiz==true?esperado.toString():  esperado < 10  ? esperado.toString().padStart(2, '0') : esperado.toString();
-      
-    
     };
   
     if (!cuentaPadre) {
-      // Para el nivel raíz se filtran los nodos con level === 0
       const nodosRaiz = this.dataNodes.value.filter(n => n.level === 0);
       const codigos = nodosRaiz.map(n => n.cuenta.cuenta_codigonivel);
       const codigoNivel = getCodigoFaltante(codigos, true);
