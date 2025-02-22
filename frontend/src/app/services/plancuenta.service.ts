@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Cuenta, Cuenta_Grupo } from '../interfaces/Cuenta';
+import { Cuenta } from '../interfaces/Cuenta';
 
 
 @Injectable({

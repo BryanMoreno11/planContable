@@ -10,9 +10,4 @@
     texto: string;
   }
 
-  export interface Cuenta_Grupo {
-    cuenta_codigonivel:string,
-    cuenta_descripcion: string,
-    cuenta_esdebito: boolean
-  }
 
