@@ -1,10 +1,3 @@
-<div class="modal-overlay" (click)="onClose()">
-    <div class="modal-container" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>{{ editMode ? 'Editar' : 'Agregar' }} Cuenta</h2>
-        <button class="close-btn" (click)="onClose()">&times;</button>
-      </div>
-      <div class="modal-body">
         <form [formGroup]="cuentaForm" (ngSubmit)="onSubmit()">
           <div class="mb-3">
             <label for="codigoNivel" class="form-label">Código Nivel</label>
@@ -23,9 +16,5 @@
           </div>
           <div class="modal-footer">
             <button type="submit" class="btn btn-primary">{{ editMode ? 'Actualizar' : 'Guardar' }}</button>
-            <button type="button" class="btn btn-secondary" (click)="onClose()">Cancelar</button>
           </div>
         </form>
-      </div>
-    </div>
-  </div>

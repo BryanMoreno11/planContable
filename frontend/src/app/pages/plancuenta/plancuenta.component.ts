@@ -7,11 +7,9 @@ import { PlancuentaService } from '../../services/plancuenta.service';
 import { Cuenta } from '../../interfaces/Cuenta';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { FormBuilder} from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ModalCuentaComponent } from '../modal-cuenta/modal-cuenta.component';
-
-
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-plancuenta',
@@ -24,7 +22,6 @@ import { ModalCuentaComponent } from '../modal-cuenta/modal-cuenta.component';
   styleUrl: './plancuenta.component.css'
 })
 export class PlancuentaComponent implements OnInit {
-  isModalOpen = false;
   codigoNivel: string = '';
   cuenta:Cuenta= { } as Cuenta;
   cuentaSeleccionada: ExampleFlatNode | null= null;
@@ -33,7 +30,8 @@ export class PlancuentaComponent implements OnInit {
   dataNodes = new BehaviorSubject<ExampleFlatNode[]>([]);
   
 
-  constructor(private _planCuentaService: PlancuentaService, private fb: FormBuilder) {
+  constructor(private _planCuentaService: PlancuentaService, private _modalService:NgbModal
+  ) {
     this.treeControl = new FlatTreeControl<ExampleFlatNode>(
       (node) => node.level,
       (node) => node.expandable
@@ -128,11 +126,15 @@ export class PlancuentaComponent implements OnInit {
   }
 
   
-  async openModal( ) {
+  async openModal(component:any, fullscreen: boolean = false) {
     if (!this.editCuenta) {
       this.codigoNivel = await this.setCodigoNivel(this.cuentaSeleccionada ?? null);
     }
-    this.isModalOpen = true;
+    this._modalService.open(component, {
+      size: 'lg',
+      centered: true,
+      fullscreen: fullscreen,
+    });
   }
   
   async setCodigoNivel(cuentaPadre: ExampleFlatNode | null):Promise<string> {
@@ -181,23 +183,11 @@ export class PlancuentaComponent implements OnInit {
   return "";
 }
 
-  closeModal() {
-    this.isModalOpen = false;
-  }
-
-
-
-  handleSubmit(cuenta: Cuenta) {
-    this.cargarResultados(cuenta);
-  }
-
-
-
+ 
   cargarResultados(cuenta:Cuenta){
 
     if(cuenta.cuenta_idpadre==null){
       this.cargarNodosPrincipales();
-      this.closeModal();
     }else{
       this._planCuentaService.getCuentas(cuenta.cuenta_idpadre).subscribe(
         {
@@ -212,7 +202,6 @@ export class PlancuentaComponent implements OnInit {
           },
           complete:()=>{
             console.log("Carga de hijos completada");
-            this.closeModal();
           }
         }
       )
@@ -233,7 +222,6 @@ export class PlancuentaComponent implements OnInit {
         complete:()=>{
           console.log("Cuenta eliminada con éxito");
           this.cargarResultados(cuenta);
-          this.closeModal();
         }
       }
     );

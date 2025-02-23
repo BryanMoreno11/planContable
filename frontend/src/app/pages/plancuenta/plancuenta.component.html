@@ -2,7 +2,7 @@
   <div class="row gap-3">
     <button (click)="exportarExcel()">Exportar a Excel</button>
     <div class="planes col-12 col-md-6">
-      <button mat-button (click)="editCuenta=false;cuentaSeleccionada=null;  openModal()">Agregar Grupo</button>
+      <button mat-button (click)="editCuenta=false;cuentaSeleccionada=null;  openModal(modalPlanCuenta)">Agregar Grupo</button>
 
       <mat-tree #tree  [dataSource]="dataNodes" [treeControl]="treeControl">
         <mat-tree-node 
@@ -22,9 +22,9 @@
             </mat-icon>
           </button>
           <p (click)="obtenerCuenta(node.id)">{{ node.cuenta.texto }}</p>
-          <button class="ms-2" (click)="editCuenta=false; cuentaSeleccionada=node; openModal();" >+</button>
+          <button class="ms-2" (click)="editCuenta=false; cuentaSeleccionada=node; openModal(modalPlanCuenta);" >+</button>
 
-          <button class="ms-2" mat-icon-button (click)="editCuenta=true; cuentaSeleccionada=node; openModal();">
+          <button class="ms-2" mat-icon-button (click)="editCuenta=true; cuentaSeleccionada=node; openModal(modalPlanCuenta);">
             <mat-icon>edit</mat-icon>
           </button>
 
@@ -64,15 +64,21 @@
   </div>
 </div>
 
-
-@if(isModalOpen){
- <app-modal-cuenta
- [editMode]="editCuenta"
- [cuenta]="cuentaSeleccionada?.cuenta ??null"
- [codigoNivel]="codigoNivel"
- (submitForm)="handleSubmit($event)"
- (closeModal)="closeModal()"
- >
- </app-modal-cuenta>
-
-}
+<ng-template #modalPlanCuenta let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">
+      {{ editCuenta ? 'Editar Sucursal': 'Sucursal Nueva' }}
+    </h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss('Cross click')" aria-hidden="true"></button>
+  </div>
+  <div class="modal-body">
+    <app-modal-cuenta
+    [editMode]="editCuenta"
+    [cuenta]="cuentaSeleccionada?.cuenta ??null"
+    [codigoNivel]="codigoNivel"
+    (submitForm)="cargarResultados($event);
+    modal.dismiss('Cross click')"
+    >
+    </app-modal-cuenta>
+  </div>
+</ng-template>

@@ -3,6 +3,8 @@ import { Cuenta } from '../../interfaces/Cuenta';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PlancuentaService } from '../../services/plancuenta.service';
 
+
+
 @Component({
   selector: 'app-modal-cuenta',
   standalone: true,
@@ -17,7 +19,6 @@ export class ModalCuentaComponent implements OnInit {
   @Input() codigoNivel:string="";
   //Salidas
   @Output() submitForm = new EventEmitter<Cuenta>();
-  @Output() closeModal = new EventEmitter<void>();
   //atributos
   cuentaForm:FormGroup;
 
@@ -111,11 +112,7 @@ export class ModalCuentaComponent implements OnInit {
     }
   }
 
-  onClose() {
-    this.closeModal.emit();
-    this.cuentaForm.reset();
-    this.cuentaForm.patchValue({ cuenta_esdebito: true });
-  }
+
 
 
 
