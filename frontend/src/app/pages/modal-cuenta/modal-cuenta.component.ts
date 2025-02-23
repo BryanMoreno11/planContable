@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Cuenta } from '../../interfaces/Cuenta';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { PlancuentaService } from '../../services/plancuenta.service';
 
 @Component({
   selector: 'app-modal-cuenta',
@@ -9,7 +10,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
   templateUrl: './modal-cuenta.component.html',
   styleUrl: './modal-cuenta.component.css'
 })
-export class ModalCuentaComponent {
+export class ModalCuentaComponent implements OnInit {
   //Datos de entrada
   @Input() editMode:boolean=false;
   @Input() cuenta:Cuenta | null=null;
@@ -20,8 +21,9 @@ export class ModalCuentaComponent {
   //atributos
   cuentaForm:FormGroup;
 
-  constructor(private fb:FormBuilder) {
+  constructor(private fb:FormBuilder, private _planCuentaService:PlancuentaService) {
       this.cuentaForm = this.fb.group({
+      cuenta_id: [null],
       cuenta_codigonivel: ['', Validators.required],
       cuenta_descripcion: ['', Validators.required],
       cuenta_esdebito: [true, Validators.required],
@@ -32,10 +34,14 @@ export class ModalCuentaComponent {
     });
   }
   //Eventos
-  ngOnChanges() {
+  ngOnInit(): void {
+    //Editar
     if (this.editMode && this.cuenta) {
+      console.log("La cuenta que llego es ",this.cuenta);
       this.cuentaForm.patchValue(this.cuenta);
-    } else if (this.codigoNivel && this.cuenta) {
+    } 
+    //Crear una cuenta hija
+    else if (this.codigoNivel && this.cuenta) {
       const codigopadre = this.cuenta.cuenta_codigopadre
       ? `${this.cuenta.cuenta_codigopadre}.${this.cuenta.cuenta_codigonivel}`
       : `${this.cuenta.cuenta_codigonivel}`;
@@ -46,18 +52,62 @@ export class ModalCuentaComponent {
         cuenta_codigonivel: this.codigoNivel,  
         cuenta_padredescripcion: this.cuenta.cuenta_descripcion
       });
-    }else{
+    }
+    //Creación de un grupo
+    else{
       this.cuentaForm.patchValue({ cuenta_codigonivel: this.codigoNivel });
     }
   }
 
+
+ 
+
+  crearCuenta(cuenta:Cuenta){
+    this._planCuentaService.crearCuenta(cuenta).subscribe(
+      {
+        next:(data:any)=>{
+         console.log("Cuenta creada con éxito", data);
+        },
+        error:(error)=>{
+          console.log("Error al crear la cuenta", error);
+        },
+        complete:()=>{
+         this.submitForm.emit(cuenta);
+
+        }
+      }
+    );
+  }
+
+  modificarCuenta(cuenta:Cuenta){
+    this._planCuentaService.actualizarCuenta(cuenta).subscribe(
+      {
+        next:(data:any)=>{
+          console.log("Cuenta actualizada con éxito");
+        },
+        error:(error)=>{
+          console.log("Error al crear la cuenta", error);
+        },
+        complete:()=>{
+          console.log("Cuenta creada con éxito");
+          this.submitForm.emit(cuenta);
+        }
+      }
+    );
+  }
+
+
   onSubmit() {
     if (this.cuentaForm.valid) {
-      const formData = {
+      const formData: Cuenta = {
         ...this.cuentaForm.value,
         cuenta_descripcion: this.cuentaForm.value.cuenta_descripcion.toUpperCase()
       };
-      this.submitForm.emit(formData);
+      if (this.editMode) {
+        this.modificarCuenta(formData);
+      } else {
+        this.crearCuenta(formData);
+      }
     }
   }
 

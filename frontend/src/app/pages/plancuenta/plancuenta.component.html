@@ -2,7 +2,7 @@
   <div class="row gap-3">
     <button (click)="exportarExcel()">Exportar a Excel</button>
     <div class="planes col-12 col-md-6">
-      <button mat-button (click)="openModal(false); editCuenta=false">Agregar Cuenta</button>
+      <button mat-button (click)="editCuenta=false;cuentaSeleccionada=null;  openModal()">Agregar Grupo</button>
 
       <mat-tree #tree  [dataSource]="dataNodes" [treeControl]="treeControl">
         <mat-tree-node 
@@ -22,9 +22,9 @@
             </mat-icon>
           </button>
           <p (click)="obtenerCuenta(node.id)">{{ node.cuenta.texto }}</p>
-          <button class="ms-2" (click)="openModal(false, node);" >+</button>
+          <button class="ms-2" (click)="editCuenta=false; cuentaSeleccionada=node; openModal();" >+</button>
 
-          <button class="ms-2" mat-icon-button (click)="openModal( true, node);">
+          <button class="ms-2" mat-icon-button (click)="editCuenta=true; cuentaSeleccionada=node; openModal();">
             <mat-icon>edit</mat-icon>
           </button>
 
@@ -37,7 +37,6 @@
     </div>
 
     <div class="cuenta-detalle col-12 col-md-5">
-
       <h2>Información de Cuenta Contable</h2>
       <form>
           <div class="mb-3">
@@ -69,12 +68,10 @@
 @if(isModalOpen){
  <app-modal-cuenta
  [editMode]="editCuenta"
- [codigoNivel]="codigoNivel"
  [cuenta]="cuentaSeleccionada?.cuenta ??null"
+ [codigoNivel]="codigoNivel"
  (submitForm)="handleSubmit($event)"
  (closeModal)="closeModal()"
- 
- 
  >
  </app-modal-cuenta>
 

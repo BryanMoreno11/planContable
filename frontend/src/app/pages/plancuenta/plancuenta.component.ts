@@ -128,20 +128,14 @@ export class PlancuentaComponent implements OnInit {
   }
 
   
-    
-  
-  async openModal(editCuenta:boolean, cuentaSeleccionada?: ExampleFlatNode ) {
-    this.cuentaSeleccionada = cuentaSeleccionada!;
-    this.editCuenta=editCuenta;
-    if (!editCuenta) {
-      this.codigoNivel = await this.setCodigoNivel(cuentaSeleccionada);
-
+  async openModal( ) {
+    if (!this.editCuenta) {
+      this.codigoNivel = await this.setCodigoNivel(this.cuentaSeleccionada ?? null);
     }
     this.isModalOpen = true;
-
   }
   
-  async setCodigoNivel(cuentaPadre?: ExampleFlatNode):Promise<string> {
+  async setCodigoNivel(cuentaPadre: ExampleFlatNode | null):Promise<string> {
     const getCodigoFaltante = (codigos: string[], raiz:boolean): string => {
       const numeros = codigos
         .map(codigo => parseInt(codigo, 10))
@@ -189,97 +183,41 @@ export class PlancuentaComponent implements OnInit {
 
   closeModal() {
     this.isModalOpen = false;
-    this.cuentaSeleccionada=null;   
   }
 
 
 
-  handleSubmit(formData: Cuenta) {
-    if (this.editCuenta) {
-      formData.cuenta_id = this.cuentaSeleccionada!.cuenta.cuenta_id;
-      this.modificarCuenta(formData);
-    } else {
-      this.crearCuenta(formData);
+  handleSubmit(cuenta: Cuenta) {
+    this.cargarResultados(cuenta);
+  }
+
+
+
+  cargarResultados(cuenta:Cuenta){
+
+    if(cuenta.cuenta_idpadre==null){
+      this.cargarNodosPrincipales();
+      this.closeModal();
+    }else{
+      this._planCuentaService.getCuentas(cuenta.cuenta_idpadre).subscribe(
+        {
+          next:(res)=>{
+            let hijos = res as Cuenta[];
+            let cuentaPadre=this.dataNodes.value.find(n => n.cuenta.cuenta_id === Number(cuenta.cuenta_idpadre));
+            this.eliminarCuentasHijasPadre(cuentaPadre!);
+            this.insertarCuentasHijasPadre(hijos, cuentaPadre!);
+          },
+          error:(error)=>{
+            console.log("Error al cargar los hijos", error);
+          },
+          complete:()=>{
+            console.log("Carga de hijos completada");
+            this.closeModal();
+          }
+        }
+      )
     }
-  }
 
-  crearCuenta(cuenta:Cuenta){
-    this._planCuentaService.crearCuenta(cuenta).subscribe(
-      {
-        next:(data:any)=>{
-          if(this.cuentaSeleccionada){
-            this._planCuentaService.getCuentas(this.cuentaSeleccionada.cuenta.cuenta_id).subscribe(
-              {
-                next:(res)=>{
-                  let hijos = res as Cuenta[];
-                  this.eliminarCuentasHijasPadre(this.cuentaSeleccionada!);
-                  this.insertarCuentasHijasPadre(hijos, this.cuentaSeleccionada!);
-                  this.closeModal();
-                },
-                error:(error)=>{
-                  console.log("Error al cargar los hijos", error);
-                },
-                complete:()=>{
-                  console.log("Carga de hijos completada");
-                }
-              }
-            );
-          }else{
-            this.cargarNodosPrincipales();
-            this.closeModal();
-          }
-        },
-        error:(error)=>{
-          console.log("Error al crear la cuenta", error);
-        },
-        complete:()=>{
-          console.log("Cuenta creada con éxito");
-
-        }
-      }
-    );
-  }
-
-
-  modificarCuenta(cuenta:Cuenta){
-    this._planCuentaService.actualizarCuenta(cuenta).subscribe(
-      {
-        next:(data:any)=>{
-
-
-          if(cuenta.cuenta_idpadre){
-            console.log("El id padre es: ",cuenta.cuenta_idpadre);
-            this._planCuentaService.getCuentas(cuenta.cuenta_idpadre).subscribe(
-              {
-                next:(res)=>{
-                  let hijos= res as Cuenta[];
-                  let cuentaPadre=this.dataNodes.value.find(n => n.cuenta.cuenta_id === Number(cuenta.cuenta_idpadre));
-                  this.eliminarCuentasHijasPadre(cuentaPadre!);
-                  this.insertarCuentasHijasPadre(hijos, cuentaPadre!);
-                  this.closeModal();
-                },
-                error:(error)=>{
-                  console.log("Error al cargar los hijos", error);
-                },
-                complete:()=>{
-                  console.log("Carga de hijos completada");
-                }
-              }
-            );
-          }else{
-            this.cargarNodosPrincipales();
-            this.closeModal();
-          }
-        },
-        error:(error)=>{
-          console.log("Error al crear la cuenta", error);
-        },
-        complete:()=>{
-          console.log("Cuenta creada con éxito");
-
-        }
-      }
-    );
   }
 
 
@@ -287,36 +225,15 @@ export class PlancuentaComponent implements OnInit {
     this._planCuentaService.eliminarCuenta(cuenta.cuenta_id).subscribe(
       {
         next:(data:any)=>{
-         
-          if(cuenta.cuenta_idpadre){
-            this._planCuentaService.getCuentas(cuenta.cuenta_idpadre).subscribe(
-              {
-                next:(res)=>{
-                  let hijos= res as Cuenta[];
-                  let cuentaPadre=this.dataNodes.value.find(n => n.cuenta.cuenta_id === Number(cuenta.cuenta_idpadre));
-                  this.eliminarCuentasHijasPadre(cuentaPadre!);
-                  this.insertarCuentasHijasPadre(hijos, cuentaPadre!);
-                  this.closeModal();
-                },
-                error:(error)=>{
-                  console.log("Error al cargar los hijos", error);
-                },
-                complete:()=>{
-                  console.log("Carga de hijos completada");
-                }
-              }
-            );
-          }else{
-            this.cargarNodosPrincipales();
-            this.closeModal();
-          }
-          
+          console.log("Cuenta eliminada con éxito");
         },
         error:(error)=>{
           console.log("Error al eliminar la cuenta", error);
         },
         complete:()=>{
           console.log("Cuenta eliminada con éxito");
+          this.cargarResultados(cuenta);
+          this.closeModal();
         }
       }
     );
@@ -350,14 +267,6 @@ export class PlancuentaComponent implements OnInit {
     }
 
   }
-
-
-
-
-    
-
-
-
 
 }
 
