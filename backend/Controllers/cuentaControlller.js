@@ -6,17 +6,18 @@ const Xlsx= require("xlsx");
 async function crearCuenta(req, res) {
 
   try {
-    if (req.body?.cuenta_idpadre) {
-      await SqlModule.Cuenta.update(
-        { cuenta_children: true },
-        { where: { cuenta_id: req.body.cuenta_idpadre } }
-      );
-    }
+    
 
     if(!req.body?.cuenta_idpadre){
       req.body.cuenta_grupo= req.body.cuenta_descripcion;
     }
-     await ModuleSQL.Cuenta.create(req.body).then(result=>{
+     await ModuleSQL.Cuenta.create(req.body).then( async (result)=>{
+      if (req.body?.cuenta_idpadre) {
+        await SqlModule.Cuenta.update(
+          { cuenta_children: true },
+          { where: { cuenta_id: req.body.cuenta_idpadre } }
+        );
+      }
       return res.status(200).json({ message: "Cuenta creada correctamente", id: result.cuenta_id });
      });
 
