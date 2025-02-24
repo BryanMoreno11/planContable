@@ -64,6 +64,7 @@ export class ModalCuentaComponent implements OnInit {
     this._planCuentaService.crearCuenta(cuenta).subscribe(
       {
         next:(data:any)=>{
+          cuenta.cuenta_id = data.id;
          console.log("Cuenta creada con éxito", data);
         },
         error:(error)=>{

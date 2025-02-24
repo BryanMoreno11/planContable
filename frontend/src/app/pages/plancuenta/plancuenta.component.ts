@@ -213,6 +213,83 @@ export class PlancuentaComponent implements OnInit {
   }
 
 
+
+
+
+  cargarResultadosMemoria(cuenta:Cuenta){
+    if(cuenta.cuenta_idpadre==null){
+      const nodosPadres= this.dataNodes.value.filter(n => n.level === 0);
+      const indexCuenta= nodosPadres.findIndex(n => n.cuenta.cuenta_id === cuenta.cuenta_id);
+      if(indexCuenta==-1){
+        this.dataNodes.value.push(this._transformer(cuenta,0));
+        this.dataNodes.next(this.dataNodes.value);
+      }else{
+        this.dataNodes.value[indexCuenta].cuenta=cuenta;
+        this.dataNodes.next(this.dataNodes.value);
+      }
+      
+    }else{
+      const padre= this.dataNodes.value.find(n => n.cuenta.cuenta_id === Number(cuenta.cuenta_idpadre));
+      if(padre && padre.expanded){
+        const nodosHijos= this.dataNodes.value.filter(n => n.cuenta.cuenta_idpadre === cuenta.cuenta_idpadre);
+        const indexCuenta= nodosHijos.findIndex(n => n.cuenta.cuenta_id === cuenta.cuenta_id);
+        if(indexCuenta==-1){
+          nodosHijos.push(this._transformer(cuenta,padre.level+1));
+          this.eliminarCuentasHijasPadre(padre);
+          this.insertarCuentasHijasPadre(nodosHijos.map(n=>n.cuenta), padre);
+        }else{
+          this.dataNodes.value[indexCuenta].cuenta=cuenta;
+          this.dataNodes.next(this.dataNodes.value);
+        }
+
+      }else if (padre && !padre.expanded){
+        
+      this._planCuentaService.getCuentas(cuenta.cuenta_idpadre).subscribe(
+        {
+          next:(res)=>{
+            let hijos = res as Cuenta[];
+            let cuentaPadre=this.dataNodes.value.find(n => n.cuenta.cuenta_id === Number(cuenta.cuenta_idpadre));
+            if (cuentaPadre) {
+              this.eliminarCuentasHijasPadre(cuentaPadre);
+              this.insertarCuentasHijasPadre(hijos, cuentaPadre);
+              cuentaPadre.expandable = hijos.length > 0;
+              cuentaPadre.expanded = hijos.length > 0 ? cuentaPadre.expanded : false;
+            }
+          },          
+          error:(error)=>{
+            console.log("Error al cargar los hijos", error);
+          },
+          complete:()=>{
+            console.log("Carga de hijos completada");
+          }
+        }
+      );
+
+
+
+      }
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+  }
+
+
+
+
+
+
+
   eliminarCuenta(cuenta:Cuenta){
     this._planCuentaService.eliminarCuenta(cuenta.cuenta_id, cuenta.cuenta_idpadre).subscribe(
       {

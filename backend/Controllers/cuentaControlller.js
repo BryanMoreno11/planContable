@@ -92,7 +92,6 @@ async function obtenerCuentasHijas(req, res) {
       .then((result) => {
         const cuentas = result.map((cuenta) => ({
           ...cuenta.toJSON(),
-          cuenta_id: cuenta.cuenta_id,
           texto: `${cuenta.cuenta_codigopadre}.${cuenta.cuenta_codigonivel} ${cuenta.cuenta_descripcion}`,
         }));
         return res.status(200).json(cuentas);

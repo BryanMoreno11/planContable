@@ -23,7 +23,9 @@
               {{ node.expanded ? "expand_more" : "chevron_right" }}
             </mat-icon>
           </button>
-          <p (click)="obtenerCuenta(node.id)">{{ node.cuenta.texto }}</p>
+          <p (click)="obtenerCuenta(node.id)">   {{ node.cuenta.cuenta_idpadre === null ? 
+            node.cuenta.cuenta_codigonivel + ' ' + node.cuenta.cuenta_descripcion : 
+            node.cuenta.cuenta_codigopadre + '.' + node.cuenta.cuenta_codigonivel + ' ' + node.cuenta.cuenta_descripcion }}</p>
           <button class="ms-2" (click)="editCuenta=false; cuentaSeleccionada=node; openModal(modalPlanCuenta);" >+</button>
 
           <button class="ms-2" mat-icon-button (click)="editCuenta=true; cuentaSeleccionada=node; openModal(modalPlanCuenta);">
@@ -78,7 +80,7 @@
     [editMode]="editCuenta"
     [cuenta]="cuentaSeleccionada?.cuenta ??null"
     [codigoNivel]="codigoNivel"
-    (submitForm)="cargarResultados($event);
+    (submitForm)="cargarResultadosMemoria($event);
     modal.dismiss('Cross click')"
     >
     </app-modal-cuenta>
