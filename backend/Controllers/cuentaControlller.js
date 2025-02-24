@@ -44,7 +44,7 @@ async function actualizarCuenta(req, res){
       return res.status(404).json({ error: "Error al actualizar" });
     });
 
-  }catch(err){
+  }catch(error){
     res
       .status(500)
       .json({ error: "Error en el servidor", details: error.message });
@@ -177,7 +177,7 @@ async function eliminarCuenta(req, res){
     }
     return res.status(200).json({ message: "Cuenta eliminada correctamente" });
 
-  }catch(err){
+  }catch(error){
     res
       .status(500)
       .json({ error: "Error en el servidor", details: error.message });
