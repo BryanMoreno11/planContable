@@ -12,6 +12,10 @@ async function crearCuenta(req, res) {
       req.body.cuenta_grupo= req.body.cuenta_descripcion;
     }
      await ModuleSQL.Cuenta.create(req.body).then( async (result)=>{
+      if(!result){
+        return res.status(400).json({ error: "Error al crear la cuenta" });
+      }
+
       if (req.body?.cuenta_idpadre) {
         await SqlModule.Cuenta.update(
           { cuenta_children: true },
@@ -42,7 +46,7 @@ async function actualizarCuenta(req, res){
         },
       })
       .then((result) => {
-        if (result[0] === 0) {
+        if (!result) {
           return res.status(404).json({ error: "Cuenta no encontrada" });
         }
         return res.status(200).json({ message: "Cuenta actualizada correctamente" });
