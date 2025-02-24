@@ -9,18 +9,18 @@ async function crearCuenta(req, res) {
     if(req.body.cuenta_idpadre==null){
       req.body.cuenta_grupo= req.body.cuenta_descripcion;
     }
+    const cuenta = await ModuleSQL.Cuenta.create(req.body);
 
-    await ModuleSQL.Cuenta.create(req.body)
-      .then((cuenta) => {
-        return res.status(200).json({ message: "Cuenta creada correctamente",
-          id:cuenta.cuenta_id
-         });
-        
-      })
-      .catch((e) => {
-        console.log(e);
-        return res.status(404).json({ error: "Error al insertar" });
-      });
+    // Si la cuenta tiene un padre, actualiza el campo cuenta_children del padre
+    if (req.body.cuenta_idpadre !== null) {
+      await SqlModule.Cuenta.update(
+        { cuenta_children: true },
+        { where: { cuenta_id: req.body.cuenta_idpadre } }
+      );
+    }
+    // Respuesta exitosa
+    return res.status(200).json({ message: "Cuenta creada correctamente", id: cuenta.cuenta_id });
+
   } catch (error) {
     res
       .status(500)
@@ -53,15 +53,6 @@ async function actualizarCuenta(req, res){
 
 
 }
-
-
-
-
-
-
-
-
-
 
 async function obtenerGrupos(req, res) {
   try {
@@ -158,19 +149,34 @@ async function obtenerCuentas(req, res) {
 
 async function eliminarCuenta(req, res){
   try{
-    const { id } = req.params;
+    const { id, id_padre } = req.params;
     await ModuleSQL.Cuenta.destroy({
       where: {
         cuenta_id: id,
       },
-    })
-    .then((result) => {
-      return res.status(200).json({ message: "Cuenta eliminada correctamente" });
-    })
-    .catch((e) => {
-      console.log(e);
-      return res.status(404).json({ error: "Error al eliminar" });
     });
+
+
+    if(id_padre && id_padre !== "null"){
+      console.log("Entro al bloque del padre");
+      await ModuleSQL.Cuenta.count(
+        {
+          where: {
+            cuenta_idpadre: id_padre,
+          },
+        }
+      ).then((result) => {
+        if (result === 0) {
+          ModuleSQL.Cuenta.update(
+            { cuenta_children: false },
+            { where: { cuenta_id:id_padre } }
+          );
+        }
+      });
+
+    }
+    return res.status(200).json({ message: "Cuenta eliminada correctamente" });
+
   }catch(err){
     res
       .status(500)

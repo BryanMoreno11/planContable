@@ -12,7 +12,7 @@ router.get("/cuenta/:id", obtenerCuenta);
 router.get("/cuentas/grupos", obtenerGrupos);
 router.get("/cuentas/hijas/:id", obtenerCuentasHijas);
 router.get("/cuentas/exportar", exportarCuentasExcel);
-router.delete("/cuentas/:id", eliminarCuenta);
+router.delete("/cuentas/:id/:id_padre?", eliminarCuenta);
 
 
 

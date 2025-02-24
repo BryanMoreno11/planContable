@@ -46,7 +46,7 @@ export class PlancuentaComponent implements OnInit {
     return {
       id: node.cuenta_id,
       level: level,
-      expandable: true,
+      expandable: node.cuenta_children,
       isLoading: false,
       expanded:false,
       cuenta: node
@@ -185,7 +185,6 @@ export class PlancuentaComponent implements OnInit {
 
  
   cargarResultados(cuenta:Cuenta){
-
     if(cuenta.cuenta_idpadre==null){
       this.cargarNodosPrincipales();
     }else{
@@ -194,9 +193,13 @@ export class PlancuentaComponent implements OnInit {
           next:(res)=>{
             let hijos = res as Cuenta[];
             let cuentaPadre=this.dataNodes.value.find(n => n.cuenta.cuenta_id === Number(cuenta.cuenta_idpadre));
-            this.eliminarCuentasHijasPadre(cuentaPadre!);
-            this.insertarCuentasHijasPadre(hijos, cuentaPadre!);
-          },
+            if (cuentaPadre) {
+              this.eliminarCuentasHijasPadre(cuentaPadre);
+              this.insertarCuentasHijasPadre(hijos, cuentaPadre);
+              cuentaPadre.expandable = hijos.length > 0;
+              cuentaPadre.expanded = hijos.length > 0 ? cuentaPadre.expanded : false;
+            }
+          },          
           error:(error)=>{
             console.log("Error al cargar los hijos", error);
           },
@@ -211,7 +214,7 @@ export class PlancuentaComponent implements OnInit {
 
 
   eliminarCuenta(cuenta:Cuenta){
-    this._planCuentaService.eliminarCuenta(cuenta.cuenta_id).subscribe(
+    this._planCuentaService.eliminarCuenta(cuenta.cuenta_id, cuenta.cuenta_idpadre).subscribe(
       {
         next:(data:any)=>{
           console.log("Cuenta eliminada con éxito");

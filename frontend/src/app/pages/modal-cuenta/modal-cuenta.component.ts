@@ -59,10 +59,7 @@ export class ModalCuentaComponent implements OnInit {
       this.cuentaForm.patchValue({ cuenta_codigonivel: this.codigoNivel });
     }
   }
-
-
- 
-
+  
   crearCuenta(cuenta:Cuenta){
     this._planCuentaService.crearCuenta(cuenta).subscribe(
       {

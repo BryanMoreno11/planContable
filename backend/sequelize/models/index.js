@@ -38,7 +38,12 @@ const Cuenta = sequelize.define('Cuenta',{
         },
         cuenta_esdebito: {
           type: DataTypes.BOOLEAN,
-          allowNull: false
+          allowNull: false,
+        },
+        cuenta_children:{
+          type: DataTypes.BOOLEAN,
+          allowNull:false,
+          defaultValue:false
         }
      
   }, {

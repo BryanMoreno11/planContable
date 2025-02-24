@@ -8,6 +8,7 @@
     cuenta_descripcion: string;
     cuenta_esdebito: boolean;
     texto: string;
+    cuenta_children:boolean;
   }
 
 
