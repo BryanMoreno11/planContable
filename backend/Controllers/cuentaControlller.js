@@ -4,22 +4,21 @@ const Xlsx= require("xlsx");
 
 
 async function crearCuenta(req, res) {
-  try {
-    //Para la creación de grupos principales
-    if(req.body.cuenta_idpadre==null){
-      req.body.cuenta_grupo= req.body.cuenta_descripcion;
-    }
-    const cuenta = await ModuleSQL.Cuenta.create(req.body);
 
-    // Si la cuenta tiene un padre, actualiza el campo cuenta_children del padre
-    if (req.body.cuenta_idpadre !== null) {
+  try {
+    if (req.body?.cuenta_idpadre) {
       await SqlModule.Cuenta.update(
         { cuenta_children: true },
         { where: { cuenta_id: req.body.cuenta_idpadre } }
       );
     }
-    // Respuesta exitosa
-    return res.status(200).json({ message: "Cuenta creada correctamente", id: cuenta.cuenta_id });
+
+    if(!req.body?.cuenta_idpadre){
+      req.body.cuenta_grupo= req.body.cuenta_descripcion;
+    }
+     await ModuleSQL.Cuenta.create(req.body).then(result=>{
+      return res.status(200).json({ message: "Cuenta creada correctamente", id: result.cuenta_id });
+     });
 
   } catch (error) {
     res
@@ -31,26 +30,32 @@ async function crearCuenta(req, res) {
 
 async function actualizarCuenta(req, res){
   try{
-    await SqlModule.Cuenta.update(req.body, {
-      where: {
-        cuenta_id: req.body.cuenta_id,
-      },
-    })
-    .then((result) => {
-      return res.status(200).json({ message: "Cuenta actualizada correctamente" });
-    })
-    .catch((e) => {
-      console.log(e);
-      return res.status(404).json({ error: "Error al actualizar" });
-    });
 
+      if(!req.body?.cuenta_id){
+        return res.status(400).json({ error: "No se proporcionó un ID de cuenta válido" });
+      }
+
+      await SqlModule.Cuenta.update(req.body, {
+        where: {
+          cuenta_id: req.body.cuenta_id,
+        },
+      })
+      .then((result) => {
+        if (result[0] === 0) {
+          return res.status(404).json({ error: "Cuenta no encontrada" });
+        }
+        return res.status(200).json({ message: "Cuenta actualizada correctamente" });
+      })
+      .catch((e) => {
+        console.log(e);
+        return res.status(404).json({ error: "Error al actualizar" });
+      });
+   
   }catch(error){
     res
       .status(500)
       .json({ error: "Error en el servidor", details: error.message });
   }
-
-
 
 }
 
@@ -110,10 +115,9 @@ async function obtenerCuentasHijas(req, res) {
 
 async function obtenerCuenta(req, res) {
   try {
-    const { id } = req.params;
     await ModuleSQL.Cuenta.findOne({
       where: {
-        cuenta_id: id,
+        cuenta_id: req.params.id,
       },
     })
       .then((result) => {
@@ -149,38 +153,37 @@ async function obtenerCuentas(req, res) {
 
 async function eliminarCuenta(req, res){
   try{
-    const { id, id_padre } = req.params;
     await ModuleSQL.Cuenta.destroy({
       where: {
-        cuenta_id: id,
+        cuenta_id: req.params.id,
       },
+    }).then(async (result) => {
+      if (!result) {
+        return res.status(404).json({ error: "Cuenta no encontrada" });
+      }
+
+      if(req.params?.id_padre){
+        await ModuleSQL.Cuenta.count(
+          {
+            where: {
+              cuenta_idpadre: req.params.id_padre,
+            },
+          }
+        ).then(async (result) => {
+          if (!result) {
+            await ModuleSQL.Cuenta.update(
+              { cuenta_children: false },
+              { where: { cuenta_id: req.params.id_padre } }
+            );
+          }
+        });
+      }
+      return res.status(200).json({ message: "Cuenta eliminada correctamente" });
+
     });
 
-
-    if(id_padre && id_padre !== "null"){
-      console.log("Entro al bloque del padre");
-      await ModuleSQL.Cuenta.count(
-        {
-          where: {
-            cuenta_idpadre: id_padre,
-          },
-        }
-      ).then((result) => {
-        if (result === 0) {
-          ModuleSQL.Cuenta.update(
-            { cuenta_children: false },
-            { where: { cuenta_id:id_padre } }
-          );
-        }
-      });
-
-    }
-    return res.status(200).json({ message: "Cuenta eliminada correctamente" });
-
   }catch(error){
-    res
-      .status(500)
-      .json({ error: "Error en el servidor", details: error.message });
+    return res.status(500).json({ error: "Error en el servidor", details: error.message });
   }
 }
 

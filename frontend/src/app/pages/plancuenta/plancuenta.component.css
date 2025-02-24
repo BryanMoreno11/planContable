@@ -10,5 +10,16 @@
     border: 1px solid blue;
 }
 
+/*Estilos para el tree*/
 
+.node-item:hover {
+    background-color: #f8f9fa; /* Gris claro (Bootstrap) */
+    cursor: pointer;
+  }
   
+  .node-selected {
+    border-left: 4px solid #0d6efd; /* Azul (Bootstrap primary) */
+    background-color: #e7f1ff; /* Azul claro */
+  }
+  
+

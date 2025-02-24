@@ -10,12 +10,13 @@ import { FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ModalCuentaComponent } from '../modal-cuenta/modal-cuenta.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-plancuenta',
   standalone: true,
   imports: [MatTreeModule,MatIconModule, MatButtonModule, FormsModule,
-    ReactiveFormsModule, ModalCuentaComponent
+    ReactiveFormsModule, ModalCuentaComponent, NgClass
      
   ],
   templateUrl: './plancuenta.component.html',
@@ -214,7 +215,7 @@ export class PlancuentaComponent implements OnInit {
 
 
   eliminarCuenta(cuenta:Cuenta){
-    this._planCuentaService.eliminarCuenta(cuenta.cuenta_id, cuenta.cuenta_idpadre).subscribe(
+    this._planCuentaService.eliminarCuenta(cuenta.cuenta_id, cuenta.cuenta_idpadre?? undefined).subscribe(
       {
         next:(data:any)=>{
           console.log("Cuenta eliminada con éxito");

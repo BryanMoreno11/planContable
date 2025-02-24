@@ -43,8 +43,8 @@ export class PlancuentaService {
     return this._httpClient.put(`${this.API_URL}/cuentas`,cuenta);
   }
 
-  eliminarCuenta(id_cuenta:number, id_cuenta_padre:number){
-    return this._httpClient.delete(`${this.API_URL}/cuentas/${id_cuenta}/${id_cuenta_padre}`);
+  eliminarCuenta(id_cuenta: number, id_cuenta_padre?: number) {
+    return this._httpClient.delete(`${this.API_URL}/cuentas/${id_cuenta}${id_cuenta_padre != null ? `/${id_cuenta_padre}` : ''}`);
   }
 
 

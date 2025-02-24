@@ -4,12 +4,14 @@
     <div class="planes col-12 col-md-6">
       <button mat-button (click)="editCuenta=false;cuentaSeleccionada=null;  openModal(modalPlanCuenta)">Agregar Grupo</button>
 
-      <mat-tree #tree  [dataSource]="dataNodes" [treeControl]="treeControl">
-        <mat-tree-node 
+      <mat-tree #tree  [dataSource]="dataNodes" [treeControl]="treeControl" class="list-group">
+        <mat-tree-node class="list-group-item d-flex align-items-center node-item"
+        
           *matTreeNodeDef="let node; when: hasChild"
           matTreeNodePadding
           
           [cdkTreeNodeTypeaheadLabel]="node.name"
+
         >
           <button
             mat-icon-button
@@ -69,7 +71,7 @@
 <ng-template #modalPlanCuenta let-modal>
   <div class="modal-header">
     <h5 class="modal-title">
-      {{ editCuenta ? 'Editar Sucursal': 'Sucursal Nueva' }}
+      {{ editCuenta ? 'Editar Cuenta': 'Cuenta Nueva' }}
     </h5>
     <button type="button" class="btn-close" (click)="modal.dismiss('Cross click')" ></button>
   </div>
