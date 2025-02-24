@@ -1,10 +1,12 @@
-CREATE TABLE cuenta(
-cuenta_id SERIAL PRIMARY KEY , 
-cuenta_id_padre INT,
-cuenta_grupo VARCHAR(100),
-cuenta_codigopadre VARCHAR(100),
-cuenta_codigonivel VARCHAR (100),
-cuenta_descripcion VARCHAR (500),
-cuenta_naturaleza VARCHAR (100),
-FOREIGN KEY (cuenta_id_padre) REFERENCES cuenta (cuenta_id)
+CREATE TABLE cuenta (
+    cuenta_id SERIAL PRIMARY KEY, 
+    cuenta_idpadre INT,
+    cuenta_grupo VARCHAR(100),
+    cuenta_codigopadre VARCHAR(100),
+    cuenta_padredescripcion VARCHAR(500),
+    cuenta_codigonivel VARCHAR(100),
+    cuenta_descripcion VARCHAR(500),
+    cuenta_esdebito BOOLEAN,
+    cuenta_children BOOLEAN DEFAULT (false),
+    FOREIGN KEY (cuenta_idpadre) REFERENCES cuenta (cuenta_id) ON DELETE CASCADE
 );
